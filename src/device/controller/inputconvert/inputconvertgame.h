@@ -69,6 +69,8 @@ protected:
                        const double& distanceStep, const double& posStepconst,
                        quint32 lowestTimer, quint32 highestTimer,
                        QQueue<QPointF>& queuePos, QQueue<quint32>& queueTimer);
+signals:
+    void mouseCursorHided(bool hide);
 
 protected:
     void timerEvent(QTimerEvent *event);

@@ -54,6 +54,7 @@ public:
 
 signals:
     void grabCursor(bool grab);
+    void mouseCursorHided(bool hide);
 
 protected:
     bool event(QEvent *event);

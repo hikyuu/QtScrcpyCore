@@ -13,6 +13,7 @@ class QWheelEvent;
 class QKeyEvent;
 class Recorder;
 class Server;
+class Mouse;
 class VideoBuffer;
 class Decoder;
 class FileHandler;
@@ -80,6 +81,7 @@ private:
 private:
     // server relevant
     QPointer<Server> m_server;
+    QPointer<Mouse> m_mouse;
     bool m_serverStartSuccess = false;
     QPointer<Decoder> m_decoder;
     QPointer<Controller> m_controller;
