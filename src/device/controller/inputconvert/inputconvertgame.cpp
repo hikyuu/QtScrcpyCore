@@ -176,7 +176,7 @@ void InputConvertGame::sendTouchUpEvent(int id, QPointF pos)
 void InputConvertGame::sendTouchEvent(int id, QPointF pos, AndroidMotioneventAction action)
 {
     if (0 > id || MULTI_TOUCH_MAX_NUM - 1 < id) {
-        Q_ASSERT(0);
+//        Q_ASSERT(0);
         return;
     }
     //qDebug() << "id:" << id << " pos:" << pos << " action" << action;
@@ -660,7 +660,7 @@ bool InputConvertGame::switchGameMap()
 {
     m_gameMap = !m_gameMap;
     qInfo() << QString("current keymap mode: %1").arg(m_gameMap ? "custom" : "normal");
-
+    emit mouseCursorHided(m_gameMap);
     if (!m_keyMap.isValidMouseMoveMap()) {
         return m_gameMap;
     }
@@ -689,6 +689,7 @@ void InputConvertGame::hideMouseCursor(bool hide)
     } else {
         QGuiApplication::restoreOverrideCursor();
     }
+    emit mouseCursorHided(hide);
 }
 
 void InputConvertGame::timerEvent(QTimerEvent *event)

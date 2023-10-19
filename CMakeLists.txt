@@ -102,6 +102,8 @@ source_group(src/device FILES ${QSC_DEVICE_SOURCES})
 set(QSC_DEVICEMANAGE_SOURCES
     src/devicemanage/devicemanage.h
     src/devicemanage/devicemanage.cpp
+        src/device/mouse/mouse.cpp
+        src/device/mouse/mouse.h
 )
 source_group(src/devicemanage FILES ${QSC_DEVICEMANAGE_SOURCES})
 

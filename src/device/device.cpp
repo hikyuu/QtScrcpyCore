@@ -10,6 +10,7 @@
 #include "recorder.h"
 #include "server.h"
 #include "demuxer.h"
+#include "mouse/mouse.h"
 
 namespace qsc {
 
@@ -39,6 +40,9 @@ Device::Device(DeviceParams params, QObject *parent) : IDevice(parent), m_params
     m_stream = new Demuxer(this);
 
     m_server = new Server(this);
+
+    m_mouse = new Mouse(this);
+
     if (m_params.recordFile && !m_params.recordPath.trimmed().isEmpty()) {
         QString absFilePath;
         QString fileDir(m_params.recordPath);
@@ -136,6 +140,7 @@ void Device::initSignals()
                 item->grabCursor(grab);
             }
         });
+        connect(m_controller, &Controller::mouseCursorHided, m_mouse, &Mouse::onHideMouseCursor);
     }
     if (m_fileHandler) {
         connect(m_fileHandler, &FileHandler::fileHandlerResult, this, [this](FileHandler::FILE_HANDLER_RESULT processResult, bool isApk) {
@@ -242,6 +247,13 @@ void Device::initSignals()
         }, Qt::DirectConnection);
     }
 
+    if (m_mouse) {
+        connect(m_mouse, &Mouse::onMouseStop, this, [this]() {
+            disconnectDevice();
+            qDebug() << "mouse thread stop";
+        });
+    }
+
     if (m_decoder) {
         connect(m_decoder, &Decoder::updateFPS, this, [this](quint32 fps) {
             for (const auto& item : m_deviceObservers) {
@@ -299,6 +311,10 @@ void Device::disconnectDevice()
 
     if (m_stream) {
         m_stream->stopDecode();
+    }
+
+    if (m_mouse) {
+        m_mouse->stopCapture();
     }
 
     // server must stop before decoder, because decoder block main thread
@@ -560,7 +576,7 @@ void Device::mouseEvent(const QMouseEvent *from, const QSize &frameSize, const Q
         return;
     }
     m_controller->mouseEvent(from, frameSize, showSize);
-
+    m_mouse->mouseEvent(from, frameSize, showSize);
     for (const auto& item : m_deviceObservers) {
         item->mouseEvent(from, frameSize, showSize);
     }

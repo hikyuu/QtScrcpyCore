@@ -51,6 +51,9 @@ void Controller::updateScript(QString gameScript)
         InputConvertGame *convertgame = new InputConvertGame(this);
         convertgame->loadKeyMap(gameScript);
         m_inputConvert = convertgame;
+        connect(convertgame, &InputConvertGame::mouseCursorHided, this, [this](bool hide) {
+            emit mouseCursorHided(hide);
+        });
     } else {
         m_inputConvert = new InputConvertNormal(this);
     }
