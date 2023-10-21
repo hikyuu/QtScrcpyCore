@@ -48,10 +48,10 @@ void Controller::updateScript(QString gameScript)
         delete m_inputConvert;
     }
     if (!gameScript.isEmpty()) {
-        InputConvertGame *convertgame = new InputConvertGame(this);
-        convertgame->loadKeyMap(gameScript);
-        m_inputConvert = convertgame;
-        connect(convertgame, &InputConvertGame::mouseCursorHided, this, [this](bool hide) {
+        InputConvertGame *convertGame = new InputConvertGame(this);
+        convertGame->loadKeyMap(gameScript);
+        m_inputConvert = convertGame;
+        connect(convertGame, &InputConvertGame::mouseCursorHided, this, [this](bool hide) {
             emit mouseCursorHided(hide);
         });
     } else {

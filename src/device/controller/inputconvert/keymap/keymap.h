@@ -26,7 +26,8 @@ public:
         KMT_STEER_WHEEL,
         KMT_DRAG,
         KMT_MOUSE_MOVE,
-        KMT_ANDROID_KEY
+        KMT_ANDROID_KEY,
+        KMT_ROTARY_TABLE
     };
     Q_ENUM(KeyMapType)
 
@@ -104,6 +105,11 @@ public:
             {
                 KeyNode keyNode;
             } androidKey;
+            struct
+            {
+                KeyNode keyNode;
+                QPointF speedRatio = { 1.0, 1.0 };
+            } rotaryTable;
             DATA() {}
             ~DATA() {}
         } data;
@@ -145,6 +151,7 @@ private:
     bool checkForSteerWhell(const QJsonObject &node);
     bool checkForDrag(const QJsonObject &node);
     bool checkForAndroidKey(const QJsonObject &node);
+    bool checkForRotaryTable(const QJsonObject &node);
 
     // get keymap from json object
     QString getItemString(const QJsonObject &node, const QString &name);

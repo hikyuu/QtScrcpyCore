@@ -248,6 +248,8 @@ void Device::initSignals()
     }
 
     if (m_mouse) {
+        connect(this, &Device::onMouseEvent, m_mouse, &Mouse::onMouseEvent);
+
         connect(m_mouse, &Mouse::onMouseStop, this, [this]() {
             disconnectDevice();
             qDebug() << "mouse thread stop";
@@ -575,8 +577,8 @@ void Device::mouseEvent(const QMouseEvent *from, const QSize &frameSize, const Q
     if (!m_controller) {
         return;
     }
+    emit onMouseEvent(from, frameSize, showSize);
     m_controller->mouseEvent(from, frameSize, showSize);
-    m_mouse->mouseEvent(from, frameSize, showSize);
     for (const auto& item : m_deviceObservers) {
         item->mouseEvent(from, frameSize, showSize);
     }

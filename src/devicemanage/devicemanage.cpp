@@ -61,6 +61,7 @@ bool DeviceManage::connectDevice(qsc::DeviceParams params)
     IDevice *device = new Device(params);
     connect(device, &Device::deviceConnected, this, &DeviceManage::onDeviceConnected);
     connect(device, &Device::deviceDisconnected, this, &DeviceManage::onDeviceDisconnected);
+
     if (!device->connectDevice()) {
         delete device;
         return false;

@@ -3,6 +3,8 @@
 
 #include <QPointF>
 #include <QQueue>
+#include <QApplication>
+#include <QWidget>
 
 #include "inputconvertnormal.h"
 #include "keymap.h"
@@ -56,7 +58,7 @@ protected:
     bool processMouseClick(const QMouseEvent *from);
     bool processMouseMove(const QMouseEvent *from);
     void moveCursorTo(const QMouseEvent *from, const QPoint &localPosPixel);
-    void mouseMoveStartTouch(const QMouseEvent *from);
+    void mouseMoveStartTouch(const QMouseEvent *from, const QPointF pos);
     void mouseMoveStopTouch();
     void startMouseMoveTimer();
     void stopMouseMoveTimer();
@@ -86,9 +88,8 @@ private:
     bool m_needBackMouseMove = false;
     int m_multiTouchID[MULTI_TOUCH_MAX_NUM] = { 0 };
     KeyMap m_keyMap;
-
+    QPointF m_currentSpeedRatio;
     bool m_processMouseMove = true;
-
     // steer wheel
     struct
     {
@@ -112,7 +113,7 @@ private:
     // mouse move
     struct
     {
-        QPointF lastConverPos;
+        QPointF lastConvertPos;
         QPointF lastPos = { 0.0, 0.0 };
         bool touching = false;
         int timer = 0;
@@ -127,6 +128,7 @@ private:
         QQueue<quint32> queueTimer;
         int pressKey = 0;
     } m_dragDelayData;
+    void processRotaryTable(KeyMap::KeyMapNode type, const QKeyEvent *constpos);
 };
 
 #endif // INPUTCONVERTGAME_H

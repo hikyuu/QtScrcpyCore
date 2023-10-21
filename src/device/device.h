@@ -1,10 +1,10 @@
 ﻿#ifndef DEVICE_H
 #define DEVICE_H
 
-#include <set>
 #include <QElapsedTimer>
 #include <QPointer>
 #include <QTime>
+#include <set>
 
 #include "../../include/QtScrcpyCore.h"
 
@@ -22,79 +22,83 @@ class VideoForm;
 class Controller;
 struct AVFrame;
 
-namespace qsc {
-
-class Device : public IDevice
+namespace qsc
 {
-    Q_OBJECT
-public:
-    explicit Device(DeviceParams params, QObject *parent = nullptr);
-    virtual ~Device();
 
-    void setUserData(void* data) override;
-    void* getUserData() override;
+    class Device : public IDevice
+    {
+        Q_OBJECT
+    public:
+        explicit Device(DeviceParams params, QObject *parent = nullptr);
+        virtual ~Device();
 
-    void registerDeviceObserver(DeviceObserver* observer) override;
-    void deRegisterDeviceObserver(DeviceObserver* observer) override;
+        void setUserData(void *data) override;
+        void *getUserData() override;
 
-    bool connectDevice() override;
-    void disconnectDevice() override;
+        void registerDeviceObserver(DeviceObserver *observer) override;
+        void deRegisterDeviceObserver(DeviceObserver *observer) override;
 
-    // key map
-    void mouseEvent(const QMouseEvent *from, const QSize &frameSize, const QSize &showSize) override;
-    void wheelEvent(const QWheelEvent *from, const QSize &frameSize, const QSize &showSize) override;
-    void keyEvent(const QKeyEvent *from, const QSize &frameSize, const QSize &showSize) override;
+        bool connectDevice() override;
+        void disconnectDevice() override;
 
-    void postGoBack() override;
-    void postGoHome() override;
-    void postGoMenu() override;
-    void postAppSwitch() override;
-    void postPower() override;
-    void postVolumeUp() override;
-    void postVolumeDown() override;
-    void postCopy() override;
-    void postCut() override;
-    void setScreenPowerMode(bool open) override;
-    void expandNotificationPanel() override;
-    void collapsePanel() override;
-    void postBackOrScreenOn(bool down) override;
-    void postTextInput(QString &text) override;
-    void requestDeviceClipboard() override;
-    void setDeviceClipboard(bool pause = true) override;
-    void clipboardPaste() override;
-    void pushFileRequest(const QString &file, const QString &devicePath = "") override;
-    void installApkRequest(const QString &apkFile) override;
+        // key map
+        void mouseEvent(const QMouseEvent *from, const QSize &frameSize, const QSize &showSize) override;
+        void wheelEvent(const QWheelEvent *from, const QSize &frameSize, const QSize &showSize) override;
+        void keyEvent(const QKeyEvent *from, const QSize &frameSize, const QSize &showSize) override;
 
-    void screenshot() override;
-    void showTouch(bool show) override;
+        void postGoBack() override;
+        void postGoHome() override;
+        void postGoMenu() override;
+        void postAppSwitch() override;
+        void postPower() override;
+        void postVolumeUp() override;
+        void postVolumeDown() override;
+        void postCopy() override;
+        void postCut() override;
+        void setScreenPowerMode(bool open) override;
+        void expandNotificationPanel() override;
+        void collapsePanel() override;
+        void postBackOrScreenOn(bool down) override;
+        void postTextInput(QString &text) override;
+        void requestDeviceClipboard() override;
+        void setDeviceClipboard(bool pause = true) override;
+        void clipboardPaste() override;
+        void pushFileRequest(const QString &file, const QString &devicePath = "") override;
+        void installApkRequest(const QString &apkFile) override;
 
-    bool isReversePort(quint16 port) override;
-    const QString &getSerial() override;
+        void screenshot() override;
+        void showTouch(bool show) override;
 
-    void updateScript(QString script) override;
-    bool isCurrentCustomKeymap() override;
+        bool isReversePort(quint16 port) override;
+        const QString &getSerial() override;
 
-private:
-    void initSignals();
-    bool saveFrame(int width, int height, uint8_t* dataRGB32);
+        void updateScript(QString script) override;
+        bool isCurrentCustomKeymap() override;
 
-private:
-    // server relevant
-    QPointer<Server> m_server;
-    QPointer<Mouse> m_mouse;
-    bool m_serverStartSuccess = false;
-    QPointer<Decoder> m_decoder;
-    QPointer<Controller> m_controller;
-    QPointer<FileHandler> m_fileHandler;
-    QPointer<Demuxer> m_stream;
-    QPointer<Recorder> m_recorder;
+    signals:
+        void onMouseEvent(const QMouseEvent *pEvent, const QSize size, const QSize qSize);
 
-    QElapsedTimer m_startTimeCount;
-    DeviceParams m_params;
-    std::set<DeviceObserver*> m_deviceObservers;
-    void* m_userData = nullptr;
-};
+    private:
+        void initSignals();
+        bool saveFrame(int width, int height, uint8_t *dataRGB32);
 
-}
+    private:
+        // server relevant
+        QPointer<Server> m_server;
+        QPointer<Mouse> m_mouse;
+        bool m_serverStartSuccess = false;
+        QPointer<Decoder> m_decoder;
+        QPointer<Controller> m_controller;
+        QPointer<FileHandler> m_fileHandler;
+        QPointer<Demuxer> m_stream;
+        QPointer<Recorder> m_recorder;
+
+        QElapsedTimer m_startTimeCount;
+        DeviceParams m_params;
+        std::set<DeviceObserver *> m_deviceObservers;
+        void *m_userData = nullptr;
+    };
+
+} // namespace qsc
 
 #endif // DEVICE_H
