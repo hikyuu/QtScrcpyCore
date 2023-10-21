@@ -35,7 +35,6 @@ private:
 public:
     Mouse(QObject *parent = Q_NULLPTR);
     void stopCapture();
-    void mouseEvent(const QMouseEvent *from, const QSize &frameSize, const QSize &showSize);
     bool startCapture();
 
 signals:
@@ -45,6 +44,7 @@ protected:
     void run() override;
 
 public slots:
+    void onMouseEvent(const QMouseEvent *from, const QSize &frameSize, const QSize &showSize);
     void sendMousePos(QPointF f,bool gameMap);
     void onHideMouseCursor(bool hide);
 

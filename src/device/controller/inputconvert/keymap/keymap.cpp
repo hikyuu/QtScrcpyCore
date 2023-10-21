@@ -304,6 +304,34 @@ void KeyMap::loadKeyMap(const QString &json)
                 keyMapNode.data.androidKey.keyNode.androidKey = static_cast<AndroidKeycode>(static_cast<int>(getItemDouble(node, "androidKey")));
                 m_keyMapNodes.push_back(keyMapNode);
             } break;
+            case KeyMap::KMT_ROTARY_TABLE: {
+                if (!checkForRotaryTable(node)) {
+                    qWarning() << "json error: keyMapNodes node format error";
+                    break;
+                }
+                QPair<ActionType, int> key = getItemKey(node, "key");
+                if (key.first == AT_INVALID) {
+                    qWarning() << "json error: keyMapNodes node invalid key: " << node.value("key").toString();
+                    break;
+                }
+
+                KeyMapNode keyMapNode;
+                keyMapNode.type = type;
+                if (checkItemDouble(node, "speedRatio")) {
+                    float ratio = static_cast<float>(getItemDouble(node, "speedRatio"));
+                    keyMapNode.data.rotaryTable.speedRatio.setX(ratio);
+                    keyMapNode.data.rotaryTable.speedRatio.setY(ratio);
+                } else {
+                    keyMapNode.data.rotaryTable.speedRatio.setX(1.0f);
+                    keyMapNode.data.rotaryTable.speedRatio.setY(1.0f);
+                }
+                keyMapNode.data.rotaryTable.keyNode.type = key.first;
+                keyMapNode.data.rotaryTable.keyNode.key = key.second;
+                keyMapNode.data.rotaryTable.keyNode.pos = getItemPos(node, "pos");
+
+                keyMapNode.data.rotaryTable.keyNode.androidKey = static_cast<AndroidKeycode>(static_cast<int>(getItemDouble(node, "androidKey")));
+                m_keyMapNodes.push_back(keyMapNode);
+            } break;
             default:
                 qWarning() << "json error: keyMapNodes invalid node type:" << node.value("type").toString();
                 break;
@@ -401,6 +429,10 @@ void KeyMap::makeReverseMap()
         case KMT_ANDROID_KEY: {
             QMultiHash<int, KeyMapNode *> &m = node.data.androidKey.keyNode.type == AT_KEY ? m_rmapKey : m_rmapMouse;
             m.insert(node.data.androidKey.keyNode.key, &node);
+        } break;
+        case KMT_ROTARY_TABLE: {
+            QMultiHash<int, KeyMapNode *> &m = node.data.rotaryTable.keyNode.type == AT_KEY ? m_rmapKey : m_rmapMouse;
+            m.insert(node.data.rotaryTable.keyNode.key, &node);
         } break;
         default:
             break;
@@ -547,4 +579,8 @@ bool KeyMap::checkForSteerWhell(const QJsonObject &node)
 bool KeyMap::checkForDrag(const QJsonObject &node)
 {
     return checkItemString(node, "key") && checkItemPos(node, "startPos") && checkItemPos(node, "endPos");
+}
+
+bool KeyMap::checkForRotaryTable(const QJsonObject &node) {
+    return checkItemString(node, "key") && checkItemPos(node, "pos");
 }

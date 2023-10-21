@@ -34,7 +34,7 @@ void Mouse::stopCapture()
     wait();
 }
 
-void Mouse::mouseEvent(const QMouseEvent *from, const QSize &frameSize, const QSize &showSize)
+void Mouse::onMouseEvent(const QMouseEvent *from, const QSize &frameSize, const QSize &showSize)
 {
     if (m_hideMouseCursor) {
         return;
