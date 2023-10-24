@@ -59,17 +59,24 @@ void Mouse::sendMousePos(QPointF pos, bool gameMap)
     QString posX = QString("%1").arg(static_cast<int>(pos.x()), 4, 10, QChar('0'));
     QString posY = QString("%1").arg(static_cast<int>(pos.y()), 4, 10, QChar('0'));
 
-    QString posStr = QString().append(posX).append(",").append(posY).append(',').append(gameMap ? '1' : '0');
-    // 将字符串转换为字节数组
-    QByteArray data = posStr.toUtf8();
-    // 向服务端发送UDP数据报，假设服务端的IP和端口是"192.168.31.99"和9999
+    QStringList posList;
+    posList << posX << posY;
+    posList.append(gameMap ? "1" : "0");
 
-    socket->waitForBytesWritten();
+    // 将字符串转换为字节数组
+    //QString posStr = QString().append(posX).append(",").append(posY).append(',').append();
+    QByteArray data = posList.join(",").toUtf8();
+
+    // 向服务端发送UDP数据报，假设服务端的IP和端口是"192.168.31.99"和9999
     socket->writeDatagram(data, QHostAddress("192.168.31.99"), 9999);
 }
 
 void Mouse::onHideMouseCursor(bool hide)
 {
     m_hideMouseCursor = hide;
-    sendMousePos(*new QPointF(960, 540), m_hideMouseCursor);
+    QWidget *activeWindow = QApplication::activeWindow();
+    if (activeWindow) {
+        QPoint center = activeWindow->mapToGlobal(activeWindow->rect().center());
+        sendMousePos(center, m_hideMouseCursor);
+    }
 }

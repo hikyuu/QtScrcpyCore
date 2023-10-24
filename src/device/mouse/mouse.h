@@ -13,6 +13,8 @@
 #include <QTimer>
 #include <QUdpSocket>
 #include <QDateTime>
+#include <QApplication>
+#include <QWidget>
 #include <controller.h>
 #include <iostream>
 
