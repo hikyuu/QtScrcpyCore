@@ -78,7 +78,7 @@ void KeyMap::loadKeyMap(const QString &json)
         }
 
         // Sanity check: No ratio must be lower than 0.001
-        if ( ( keyMapNode.data.mouseMove.speedRatio.x() < 0.001f ) || ( keyMapNode.data.mouseMove.speedRatio.x() < 0.001f ) ) {
+        if ((keyMapNode.data.mouseMove.speedRatio.x() < 0.001f) || (keyMapNode.data.mouseMove.speedRatio.x() < 0.001f)) {
             errorString = QString("json error: Minimum speedRatio is 0.001");
             goto parseError;
         }
@@ -167,7 +167,11 @@ void KeyMap::loadKeyMap(const QString &json)
                 keyMapNode.data.click.keyNode.pos = getItemPos(node, "pos");
                 keyMapNode.data.click.switchMap = getItemBool(node, "switchMap");
                 keyMapNode.data.click.keyNode.androidKey = static_cast<AndroidKeycode>(static_cast<int>(getItemDouble(node, "androidKey")));
-
+                if (checkItemBool(node, "freshMouseMove")) {
+                    keyMapNode.data.click.freshMouseMove = getItemBool(node, "freshMouseMove");
+                } else {
+                    keyMapNode.data.click.freshMouseMove = false;
+                }
                 m_keyMapNodes.push_back(keyMapNode);
             } break;
             case KeyMap::KMT_CLICK_TWICE: {
@@ -581,6 +585,7 @@ bool KeyMap::checkForDrag(const QJsonObject &node)
     return checkItemString(node, "key") && checkItemPos(node, "startPos") && checkItemPos(node, "endPos");
 }
 
-bool KeyMap::checkForRotaryTable(const QJsonObject &node) {
+bool KeyMap::checkForRotaryTable(const QJsonObject &node)
+{
     return checkItemString(node, "key") && checkItemPos(node, "pos");
 }

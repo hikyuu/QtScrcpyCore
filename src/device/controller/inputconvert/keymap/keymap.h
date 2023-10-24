@@ -77,6 +77,7 @@ public:
             {
                 KeyNode keyNode;
                 bool switchMap = false;
+                bool freshMouseMove = false;
             } click;
             struct
             {

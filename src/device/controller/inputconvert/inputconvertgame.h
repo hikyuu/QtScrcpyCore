@@ -43,7 +43,7 @@ protected:
     void processSteerWheel(const KeyMap::KeyMapNode &node, const QKeyEvent *from);
 
     // click
-    void processKeyClick(const QPointF &clickPos, bool clickTwice, bool switchMap, const QKeyEvent *from);
+    void processKeyClick(const QPointF &clickPos, bool clickTwice, bool switchMap, bool freshMouseMove, const QKeyEvent *from);
 
     // click mutil
     void processKeyClickMulti(const KeyMap::DelayClickNode *nodes, const int count, const QKeyEvent *from);
@@ -117,6 +117,7 @@ private:
         QPointF lastPos = { 0.0, 0.0 };
         bool touching = false;
         int timer = 0;
+        bool needResetTouch = true;
         bool smallEyes = false;
     } m_ctrlMouseMove;
 
