@@ -20,7 +20,7 @@ AdbProcess::AdbProcess(QObject *parent)
 
 AdbProcess::~AdbProcess()
 {
-    if (m_adbImpl->isRuning()) {
+    if (m_adbImpl->isRunning()) {
         m_adbImpl->kill();
     }
     delete m_adbImpl;
@@ -36,9 +36,9 @@ void AdbProcess::execute(const QString &serial, const QStringList &args)
     m_adbImpl->execute(serial, args);
 }
 
-bool AdbProcess::isRuning()
+bool AdbProcess::isRunning()
 {
-    return m_adbImpl->isRuning();
+    return m_adbImpl->isRunning();
 }
 
 void AdbProcess::setShowTouchesEnabled(const QString &serial, bool enabled)

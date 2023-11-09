@@ -75,7 +75,7 @@ void InputConvertGame::keyEvent(const QKeyEvent *from, const QSize &frameSize, c
     if (m_needBackMouseMove && KeyMap::KMT_CLICK == node.type && node.data.click.switchMap) {
         updateSize(frameSize, showSize);
         // Qt::Key_Tab Qt::Key_M for PUBG mobile
-        processKeyClick(node.data.click.keyNode.pos, false, node.data.click.switchMap, false, from);
+        processKeyClick(false, node, from);
         return;
     }
 
@@ -112,11 +112,11 @@ void InputConvertGame::keyEvent(const QKeyEvent *from, const QSize &frameSize, c
             return;
         // 处理普通按键
         case KeyMap::KMT_CLICK:
-            processKeyClick(node.data.click.keyNode.pos, false, node.data.click.switchMap, node.data.click.freshMouseMove, from);
+            processKeyClick(false, node, from);
             processAndroidKey(node.data.click.keyNode.androidKey, from);
             return;
         case KeyMap::KMT_CLICK_TWICE:
-            processKeyClick(node.data.clickTwice.keyNode.pos, true, false, false, from);
+            processKeyClick(true, node, from);
             processAndroidKey(node.data.clickTwice.keyNode.androidKey, from);
             return;
         case KeyMap::KMT_CLICK_MULTI:
@@ -411,12 +411,14 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
 
 // -------- key event --------
 
-void InputConvertGame::processKeyClick(const QPointF &clickPos, bool clickTwice, bool switchMap, bool freshMouseMove, const QKeyEvent *from)
+void InputConvertGame::processKeyClick(bool clickTwice, const KeyMap::KeyMapNode &node, const QKeyEvent *from)
 {
-    if (switchMap && QEvent::KeyRelease == from->type()) {
-        m_needBackMouseMove = !m_needBackMouseMove;
-        hideMouseCursor(!m_needBackMouseMove);
-    }
+    bool switchMap = node.data.click.switchMap;
+    QPointF clickPos = node.data.click.keyNode.pos;
+    bool forceSwitchOn = node.data.click.forceSwitchOn;
+    bool freshMouseMove = node.data.click.freshMouseMove;
+
+    switchMouse(switchMap, forceSwitchOn, from);
 
     if (QEvent::KeyPress == from->type()) {
         int id = attachTouchID(from->key());
@@ -434,10 +436,19 @@ void InputConvertGame::processKeyClick(const QPointF &clickPos, bool clickTwice,
         detachTouchID(from->key());
         if (!switchMap && freshMouseMove) {
             qDebug() << "delayRefreshMouse" << freshMouseMove;
-            QTimer::singleShot(50, this, [this]() {
-                mouseMoveStopTouch(); });
+            QTimer::singleShot(50, this, [this]() { mouseMoveStopTouch(); });
         }
     }
+}
+void InputConvertGame::switchMouse(bool switchMap, bool forceSwitchOn, const QKeyEvent *from)
+{
+    if (!switchMap || QEvent::KeyRelease != from->type())
+        return;
+    // 只显示鼠标不关闭鼠标
+    if (forceSwitchOn && m_needBackMouseMove)
+        return;
+    hideMouseCursor(m_needBackMouseMove);
+    m_needBackMouseMove = !m_needBackMouseMove;
 }
 
 void InputConvertGame::processKeyClickMulti(const KeyMap::DelayClickNode *nodes, const int count, const QKeyEvent *from)
@@ -562,9 +573,7 @@ bool InputConvertGame::processMouseClick(const QMouseEvent *from)
         int id = attachTouchID(from->button());
         sendTouchDownEvent(id, node.data.click.keyNode.pos);
         if (node.data.click.freshMouseMove) {
-            QTimer::singleShot(50, this, [this]() {
-                qDebug() << "delayRefreshMouse";
-                mouseMoveStopTouch(); });
+            mouseMoveStopTouch();
         }
         return true;
     }

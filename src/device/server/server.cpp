@@ -54,7 +54,7 @@ Server::~Server() {}
 
 bool Server::pushServer()
 {
-    if (m_workProcess.isRuning()) {
+    if (m_workProcess.isRunning()) {
         m_workProcess.kill();
     }
     m_workProcess.push(m_params.serial, m_params.serverLocalPath, m_params.serverRemotePath);
@@ -63,7 +63,7 @@ bool Server::pushServer()
 
 bool Server::enableTunnelReverse()
 {
-    if (m_workProcess.isRuning()) {
+    if (m_workProcess.isRunning()) {
         m_workProcess.kill();
     }
     m_workProcess.reverse(m_params.serial, QString(SOCKET_NAME_PREFIX "_%1").arg(m_params.scid, 8, 16, QChar('0')), m_params.localPort);
@@ -87,7 +87,7 @@ bool Server::disableTunnelReverse()
 
 bool Server::enableTunnelForward()
 {
-    if (m_workProcess.isRuning()) {
+    if (m_workProcess.isRunning()) {
         m_workProcess.kill();
     }
     m_workProcess.forward(m_params.serial, m_params.localPort, QString(SOCKET_NAME_PREFIX "_%1").arg(m_params.scid, 8, 16, QChar('0')));
@@ -110,7 +110,7 @@ bool Server::disableTunnelForward()
 
 bool Server::execute()
 {
-    if (m_serverProcess.isRuning()) {
+    if (m_serverProcess.isRunning()) {
         m_serverProcess.kill();
     }
     QStringList args;

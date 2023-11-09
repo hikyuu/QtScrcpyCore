@@ -43,7 +43,7 @@ protected:
     void processSteerWheel(const KeyMap::KeyMapNode &node, const QKeyEvent *from);
 
     // click
-    void processKeyClick(const QPointF &clickPos, bool clickTwice, bool switchMap, bool freshMouseMove, const QKeyEvent *from);
+    void processKeyClick(bool clickTwice, const KeyMap::KeyMapNode &node, const QKeyEvent *from);
 
     // click mutil
     void processKeyClickMulti(const KeyMap::DelayClickNode *nodes, const int count, const QKeyEvent *from);
@@ -130,6 +130,7 @@ private:
         int pressKey = 0;
     } m_dragDelayData;
     void processRotaryTable(KeyMap::KeyMapNode type, const QKeyEvent *constpos);
+    void switchMouse(bool switchMap, bool forceSwitchOn, const QKeyEvent *from);
 };
 
 #endif // INPUTCONVERTGAME_H

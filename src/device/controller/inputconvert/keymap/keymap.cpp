@@ -167,11 +167,16 @@ void KeyMap::loadKeyMap(const QString &json)
                 keyMapNode.data.click.keyNode.pos = getItemPos(node, "pos");
                 keyMapNode.data.click.switchMap = getItemBool(node, "switchMap");
                 keyMapNode.data.click.keyNode.androidKey = static_cast<AndroidKeycode>(static_cast<int>(getItemDouble(node, "androidKey")));
+                keyMapNode.data.click.freshMouseMove = false;
+                keyMapNode.data.click.forceSwitchOn = false;
+
                 if (checkItemBool(node, "freshMouseMove")) {
                     keyMapNode.data.click.freshMouseMove = getItemBool(node, "freshMouseMove");
-                } else {
-                    keyMapNode.data.click.freshMouseMove = false;
                 }
+                if (checkItemBool(node, "forceSwitchOn")) {
+                    keyMapNode.data.click.forceSwitchOn = getItemBool(node, "forceSwitchOn");
+                }
+
                 m_keyMapNodes.push_back(keyMapNode);
             } break;
             case KeyMap::KMT_CLICK_TWICE: {
