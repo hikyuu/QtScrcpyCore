@@ -19,7 +19,7 @@ public:
     void push(const QString &serial, const QString &local, const QString &remote);
     void install(const QString &serial, const QString &local);
     void removePath(const QString &serial, const QString &path);
-    bool isRuning();
+    bool isRunning();
     void setShowTouchesEnabled(const QString &serial, bool enabled);
     QStringList getDevicesSerialFromStdOut();
     QString getDeviceIPFromStdOut();

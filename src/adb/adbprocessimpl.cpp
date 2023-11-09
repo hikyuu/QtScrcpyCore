@@ -16,7 +16,7 @@ AdbProcessImpl::AdbProcessImpl(QObject *parent) : QProcess(parent)
 
 AdbProcessImpl::~AdbProcessImpl()
 {
-    if (isRuning()) {
+    if (isRunning()) {
         close();
     }
 }
@@ -91,7 +91,7 @@ void AdbProcessImpl::execute(const QString &serial, const QStringList &args)
     start(getAdbPath(), adbArgs);
 }
 
-bool AdbProcessImpl::isRuning()
+bool AdbProcessImpl::isRunning()
 {
     if (QProcess::NotRunning == state()) {
         return false;
