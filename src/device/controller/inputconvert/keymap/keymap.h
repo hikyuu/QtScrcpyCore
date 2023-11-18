@@ -91,7 +91,7 @@ public:
             struct
             {
                 QPointF centerPos = { 0.0, 0.0 };
-                KeyNode left, right, up, down;
+                KeyNode left, right, up, down, switchKey;
             } steerWheel;
             struct
             {
@@ -163,6 +163,8 @@ private:
     QPointF getItemPos(const QJsonObject &node, const QString &name);
     QPair<ActionType, int> getItemKey(const QJsonObject &node, const QString &name);
     KeyMapType getItemKeyMapType(const QJsonObject &node, const QString &name);
+
+    void setSteerWheelSwitchMode(const QJsonObject &node, KeyMap::KeyMapNode &keyMapNode);
 
 private:
     static QString s_keyMapPath;

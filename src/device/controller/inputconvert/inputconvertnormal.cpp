@@ -175,6 +175,8 @@ AndroidKeycode InputConvertNormal::convertKeyCode(int key, Qt::KeyboardModifiers
     case Qt::Key_Tab:
         keyCode = AKEYCODE_TAB;
         break;
+    case Qt::Key_CapsLock:
+        keyCode = AKEYCODE_CAPS_LOCK;
     case Qt::Key_Home:
         keyCode = AKEYCODE_MOVE_HOME;
         break;
