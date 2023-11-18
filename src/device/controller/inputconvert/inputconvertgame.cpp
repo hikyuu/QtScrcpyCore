@@ -71,6 +71,7 @@ void InputConvertGame::keyEvent(const QKeyEvent *from, const QSize &frameSize, c
     }
 
     const KeyMap::KeyMapNode &node = m_keyMap.getKeyMapNodeKey(from->key());
+    qDebug() <<"buttonType: "<< node.type;
     // 处理特殊按键：可以释放出鼠标的按键
     if (m_needBackMouseMove && KeyMap::KMT_CLICK == node.type && node.data.click.switchMap) {
         updateSize(frameSize, showSize);
@@ -329,17 +330,36 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
 {
     int key = from->key();
     bool flag = from->type() == QEvent::KeyPress;
+
+    if (flag && key == node.data.steerWheel.switchKey.key) {
+        m_ctrlSteerWheel.clickMode = !m_ctrlSteerWheel.clickMode;
+        return;
+    }
     // identify keys
     if (key == node.data.steerWheel.up.key) {
         m_ctrlSteerWheel.pressedUp = flag;
+        m_ctrlSteerWheel.clickPos = node.data.steerWheel.up.pos;
     } else if (key == node.data.steerWheel.right.key) {
         m_ctrlSteerWheel.pressedRight = flag;
+        m_ctrlSteerWheel.clickPos = node.data.steerWheel.right.pos;
     } else if (key == node.data.steerWheel.down.key) {
         m_ctrlSteerWheel.pressedDown = flag;
+        m_ctrlSteerWheel.clickPos = node.data.steerWheel.down.pos;
     } else { // left
         m_ctrlSteerWheel.pressedLeft = flag;
-    }
+        m_ctrlSteerWheel.clickPos = node.data.steerWheel.left.pos;
 
+    }
+    if (m_ctrlSteerWheel.clickMode){
+        if (QEvent::KeyPress == from->type()) {
+            int id = attachTouchID(from->key());
+            sendTouchDownEvent(id, m_ctrlSteerWheel.clickPos);
+        } else if (QEvent::KeyRelease == from->type()) {
+            sendTouchUpEvent(getTouchID(from->key()), m_ctrlSteerWheel.clickPos);
+            detachTouchID(from->key());
+        }
+        return;
+    }
     // calc offset and pressed number
     QPointF offset(0.0, 0.0);
     int pressedNum = 0;
@@ -378,6 +398,7 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
     m_ctrlSteerWheel.delayData.timer->stop();
     m_ctrlSteerWheel.delayData.queueTimer.clear();
     m_ctrlSteerWheel.delayData.queuePos.clear();
+
 
     // first press, get key and touch down
     if (pressedNum == 1 && flag) {

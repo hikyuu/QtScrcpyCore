@@ -41,7 +41,7 @@ void Mouse::onMouseEvent(const QMouseEvent *from, const QSize &frameSize, const 
     }
 
     qint64 timestamp = QDateTime::currentDateTime().toMSecsSinceEpoch(); //毫秒级
-    if (timestamp - m_timestamp < 15) {
+    if (timestamp - m_timestamp < 5) {
         return;
     }
     m_timestamp = timestamp;
@@ -54,7 +54,6 @@ void Mouse::onMouseEvent(const QMouseEvent *from, const QSize &frameSize, const 
 
 void Mouse::sendMousePos(QPointF pos, bool gameMap)
 {
-
     // 将坐标转换为字符串格式，比如"(100, 200)"
     QString posX = QString("%1").arg(static_cast<int>(pos.x()), 4, 10, QChar('0'));
     QString posY = QString("%1").arg(static_cast<int>(pos.y()), 4, 10, QChar('0'));

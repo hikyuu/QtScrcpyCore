@@ -99,7 +99,8 @@ private:
         bool pressedDown = false;
         bool pressedLeft = false;
         bool pressedRight = false;
-
+        bool clickMode = false;
+        QPointF clickPos;
         // for delay
         struct {
             QPointF currentPos;

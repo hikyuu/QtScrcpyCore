@@ -220,16 +220,16 @@ void KeyMap::loadKeyMap(const QString &json)
                 QJsonObject clickNode;
                 keyMapNode.data.clickMulti.keyNode.delayClickNodesCount = 0;
 
-                for (int i = 0; i < clickNodes.size(); i++) {
-                    if (i >= MAX_DELAY_CLICK_NODES) {
+                for (int _i = 0; _i < clickNodes.size(); _i++) {
+                    if (_i >= MAX_DELAY_CLICK_NODES) {
                         qInfo() << "clickNodes too much, up to " << MAX_DELAY_CLICK_NODES;
                         break;
                     }
-                    clickNode = clickNodes.at(i).toObject();
+                    clickNode = clickNodes.at(_i).toObject();
                     DelayClickNode delayClickNode;
                     delayClickNode.delay = getItemDouble(clickNode, "delay");
                     delayClickNode.pos = getItemPos(clickNode, "pos");
-                    keyMapNode.data.clickMulti.keyNode.delayClickNodes[i] = delayClickNode;
+                    keyMapNode.data.clickMulti.keyNode.delayClickNodes[_i] = delayClickNode;
                     keyMapNode.data.clickMulti.keyNode.delayClickNodesCount++;
                 }
 
@@ -270,6 +270,9 @@ void KeyMap::loadKeyMap(const QString &json)
                 keyMapNode.data.steerWheel.down = { downKey.first, downKey.second, QPointF(0, 0), QPointF(0, 0), getItemDouble(node, "downOffset") };
 
                 keyMapNode.data.steerWheel.centerPos = getItemPos(node, "centerPos");
+
+                setSteerWheelSwitchMode(node, keyMapNode);
+
                 m_idxSteerWheel = m_keyMapNodes.size();
                 m_keyMapNodes.push_back(keyMapNode);
             } break;
@@ -357,6 +360,37 @@ parseError:
     }
     return;
 }
+void KeyMap::setSteerWheelSwitchMode(const QJsonObject &node, KeyMap::KeyMapNode &keyMapNode)
+{
+    if (!checkItemString(node, "switchKey"))
+        return;
+    QPair<ActionType, int> switchKey = getItemKey(node, "switchKey");
+    if (switchKey.first == AT_INVALID) {
+        qWarning() << "json error: keyMapNodes node invalid key: " << node.value("switchKey").toString();
+        return;
+    }
+    if (!checkItemPos(node, "leftClickPos")) {
+        qWarning() << "json error: keyMapNodes has error: " << "leftClickPos";
+        return;
+    }
+    if (!checkItemPos(node, "rightClickPos")) {
+        qWarning() << "json error: keyMapNodes has error: " << "rightClickPos";
+        return;
+    }
+    if (!checkItemPos(node, "upClickPos")) {
+        qWarning() << "json error: keyMapNodes has error: " << "upClickPos";
+        return;
+    }
+    if (!checkItemPos(node, "downClickPos")) {
+        qWarning() << "json error: keyMapNodes has error: " << "downClickPos";
+        return;
+    }
+    keyMapNode.data.steerWheel.left.pos = getItemPos(node, "leftClickPos");
+    keyMapNode.data.steerWheel.right.pos = getItemPos(node, "rightClickPos");
+    keyMapNode.data.steerWheel.up.pos = getItemPos(node, "upClickPos");
+    keyMapNode.data.steerWheel.down.pos = getItemPos(node, "downClickPos");
+    keyMapNode.data.steerWheel.switchKey = { switchKey.first, switchKey.second};
+}
 
 const KeyMap::KeyMapNode &KeyMap::getKeyMapNode(int key)
 {
@@ -430,6 +464,8 @@ void KeyMap::makeReverseMap()
             mu.insert(node.data.steerWheel.up.key, &node);
             QMultiHash<int, KeyMapNode *> &md = node.data.steerWheel.down.type == AT_KEY ? m_rmapKey : m_rmapMouse;
             md.insert(node.data.steerWheel.down.key, &node);
+            QMultiHash<int, KeyMapNode *> &mc = node.data.steerWheel.switchKey.type == AT_KEY ? m_rmapKey : m_rmapMouse;
+            mc.insert(node.data.steerWheel.switchKey.key, &node);
         } break;
         case KMT_DRAG: {
             QMultiHash<int, KeyMapNode *> &m = node.data.drag.keyNode.type == AT_KEY ? m_rmapKey : m_rmapMouse;
