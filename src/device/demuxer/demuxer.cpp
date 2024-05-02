@@ -18,13 +18,7 @@ Demuxer::Demuxer(QObject *parent)
     : QThread(parent)
 {}
 
-Demuxer::~Demuxer() {
-    if (m_videoSocket) {
-        m_videoSocket->close();
-        delete m_videoSocket;
-        m_videoSocket = Q_NULLPTR;
-    }
-}
+Demuxer::~Demuxer() {}
 
 static void avLogCallback(void *avcl, int level, const char *fmt, va_list vl)
 {
@@ -79,6 +73,11 @@ void Demuxer::installVideoSocket(VideoSocket *videoSocket)
     m_videoSocket = videoSocket;
 }
 
+void Demuxer::setFrameSize(const QSize &frameSize)
+{
+    m_frameSize = frameSize;
+}
+
 static quint32 bufferRead32be(quint8 *buf)
 {
     return static_cast<quint32>((buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3]);
@@ -119,7 +118,7 @@ void Demuxer::run()
 {
     m_codecCtx = Q_NULLPTR;
     m_parser = Q_NULLPTR;
-    AVPacket* packet = Q_NULLPTR;
+    AVPacket *packet = Q_NULLPTR;
 
     // codec
     const AVCodec* codec = avcodec_find_decoder(AV_CODEC_ID_H264);
@@ -134,6 +133,10 @@ void Demuxer::run()
         qCritical("Could not allocate codec context");
         goto runQuit;
     }
+    m_codecCtx->flags |= AV_CODEC_FLAG_LOW_DELAY;
+    m_codecCtx->width = m_frameSize.width();
+    m_codecCtx->height = m_frameSize.height();
+    m_codecCtx->pix_fmt = AV_PIX_FMT_YUV420P;
 
     m_parser = av_parser_init(AV_CODEC_ID_H264);
     if (!m_parser) {
@@ -179,6 +182,12 @@ void Demuxer::run()
 runQuit:
     if (m_codecCtx) {
         avcodec_free_context(&m_codecCtx);
+    }
+
+    if (m_videoSocket) {
+        m_videoSocket->close();
+        delete m_videoSocket;
+        m_videoSocket = Q_NULLPTR;
     }
 
     emit onStreamStop();
