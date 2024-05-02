@@ -169,12 +169,16 @@ void KeyMap::loadKeyMap(const QString &json)
                 keyMapNode.data.click.keyNode.androidKey = static_cast<AndroidKeycode>(static_cast<int>(getItemDouble(node, "androidKey")));
                 keyMapNode.data.click.freshMouseMove = false;
                 keyMapNode.data.click.forceSwitchOn = false;
+                keyMapNode.data.click.forceSwitchOff = false;
 
                 if (checkItemBool(node, "freshMouseMove")) {
                     keyMapNode.data.click.freshMouseMove = getItemBool(node, "freshMouseMove");
                 }
                 if (checkItemBool(node, "forceSwitchOn")) {
                     keyMapNode.data.click.forceSwitchOn = getItemBool(node, "forceSwitchOn");
+                }
+                if (checkItemBool(node, "forceSwitchOff")) {
+                    keyMapNode.data.click.forceSwitchOff = getItemBool(node, "forceSwitchOff");
                 }
 
                 m_keyMapNodes.push_back(keyMapNode);

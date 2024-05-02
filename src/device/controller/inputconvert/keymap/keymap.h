@@ -79,6 +79,7 @@ public:
                 bool switchMap = false;
                 bool freshMouseMove = false;
                 bool forceSwitchOn = false;
+                bool forceSwitchOff = false;
             } click;
             struct
             {

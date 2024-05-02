@@ -41,7 +41,7 @@ Device::Device(DeviceParams params, QObject *parent) : IDevice(parent), m_params
 
     m_server = new Server(this);
 
-    m_mouse = new Mouse(this);
+    m_mouse = new Mouse(this, m_params);
 
     if (m_params.recordFile && !m_params.recordPath.trimmed().isEmpty()) {
         QString absFilePath;

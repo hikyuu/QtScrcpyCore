@@ -5,6 +5,7 @@
 #include <QQueue>
 #include <QApplication>
 #include <QWidget>
+#include <QScreen>
 
 #include "inputconvertnormal.h"
 #include "keymap.h"
@@ -85,6 +86,7 @@ private:
     QSize m_frameSize;
     QSize m_showSize;
     bool m_gameMap = false;
+    //
     bool m_needBackMouseMove = false;
     int m_multiTouchID[MULTI_TOUCH_MAX_NUM] = { 0 };
     KeyMap m_keyMap;
@@ -129,9 +131,11 @@ private:
         QQueue<QPointF> queuePos;
         QQueue<quint32> queueTimer;
         int pressKey = 0;
+        bool wheeling = false;
+        int wheelDelayUpTime = 0;
     } m_dragDelayData;
     void processRotaryTable(KeyMap::KeyMapNode type, const QKeyEvent *constpos);
-    void switchMouse(bool switchMap, bool forceSwitchOn, const QKeyEvent *from);
+    void switchMouse(bool switchMap, bool forceSwitchOn,bool forceSwitchOff, const QKeyEvent *from);
 };
 
 #endif // INPUTCONVERTGAME_H
