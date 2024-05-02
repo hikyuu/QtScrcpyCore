@@ -34,7 +34,7 @@ Server::Server(QObject *parent) : QObject(parent)
         } else {
             m_controlSocket = tmp;
             if (m_controlSocket && m_controlSocket->isValid()) {
-                // we don't need the server socket anymore
+                // we don't need the server m_socket anymore
                 // just m_videoSocket is ok
                 m_serverSocket.close();
                 // we don't need the adb tunnel anymore
@@ -311,7 +311,7 @@ bool Server::startServerByStep()
             stepSuccess = enableTunnelForward();
             break;
         case SSS_EXECUTE_SERVER:
-            // server will connect to our server socket
+            // server will connect to our server m_socket
             stepSuccess = execute();
             break;
         default:
@@ -399,7 +399,7 @@ void Server::onConnectTimer()
     if (!videoSocket->waitForConnected(1000)) {
         // 连接到adb很快的，这里失败不重试
         m_connectCount = MAX_CONNECT_COUNT;
-        qWarning("video socket connect to server failed");
+        qWarning("video m_socket connect to server failed");
         goto result;
     }
 
@@ -407,7 +407,7 @@ void Server::onConnectTimer()
     if (!controlSocket->waitForConnected(1000)) {
         // 连接到adb很快的，这里失败不重试
         m_connectCount = MAX_CONNECT_COUNT;
-        qWarning("control socket connect to server failed");
+        qWarning("control m_socket connect to server failed");
         goto result;
     }
 
@@ -421,7 +421,7 @@ void Server::onConnectTimer()
             success = true;
             goto result;
         } else {
-            qWarning("video socket connect to server read device info failed, try again");
+            qWarning("video m_socket connect to server read device info failed, try again");
             goto result;
         }
     } else {
@@ -491,7 +491,7 @@ void Server::onWorkProcessResult(qsc::AdbProcess::ADB_EXEC_RESULT processResult)
                     // serves video stream and control. However, at the network level, the
                     // client listens and the server connects to the client. That way, the
                     // client can listen before starting the server app, so there is no need to
-                    // try to connect until the server socket is listening on the device.
+                    // try to connect until the server m_socket is listening on the device.
                     m_serverSocket.setMaxPendingConnections(2);
                     if (!m_serverSocket.listen(QHostAddress::LocalHost, m_params.localPort)) {
                         qCritical() << QString("Could not listen on port %1").arg(m_params.localPort).toStdString().c_str();
