@@ -8,6 +8,7 @@
 #include <QPointF>
 #include <QRectF>
 #include <QVector>
+#include <utility>
 
 #include "keycodes.h"
 
@@ -27,7 +28,8 @@ public:
         KMT_DRAG,
         KMT_MOUSE_MOVE,
         KMT_ANDROID_KEY,
-        KMT_ROTARY_TABLE
+        KMT_ROTARY_TABLE,
+        KMT_DUAL_MODE
     };
     Q_ENUM(KeyMapType)
 
@@ -45,6 +47,12 @@ public:
         QPointF pos = QPointF(0, 0);
     };
 
+    struct SecondNode
+    {
+//        std::string comment;
+        int time = 0;
+    };
+
     struct KeyNode
     {
         ActionType type = AT_INVALID;
@@ -55,31 +63,38 @@ public:
         DelayClickNode delayClickNodes[MAX_DELAY_CLICK_NODES]; // for multi clicks
         int delayClickNodesCount = 0;
         AndroidKeycode androidKey = AKEYCODE_UNKNOWN;          // for key press
-
+//        bool repeat = false;
+        SecondNode secondNodes[MAX_DELAY_CLICK_NODES];
+//        int secondNodesCount = 0;
         KeyNode(
             ActionType type = AT_INVALID,
             int key = Qt::Key_unknown,
             QPointF pos = QPointF(0, 0),
             QPointF extendPos = QPointF(0, 0),
             double extendOffset = 0.0,
-            AndroidKeycode androidKey = AKEYCODE_UNKNOWN)
-            : type(type), key(key), pos(pos), extendPos(extendPos), extendOffset(extendOffset), androidKey(androidKey)
-        {
-        }
+            AndroidKeycode androidKey = AKEYCODE_UNKNOWN
+            ) : type(type),
+            key(key),
+            pos(pos),
+            extendPos(extendPos),
+            extendOffset(extendOffset),
+            androidKey(androidKey){}
     };
 
     struct KeyMapNode
     {
         KeyMapType type = KMT_INVALID;
+        bool switchMap = false;
+        bool forceSwitchOn = false;
+        bool forceSwitchOff = false;
+        bool freshMouseMove = false;
+        bool focusOn = false;
+        QPointF focusPos = { 0.0, 0.0 };
         union DATA
         {
             struct
             {
                 KeyNode keyNode;
-                bool switchMap = false;
-                bool freshMouseMove = false;
-                bool forceSwitchOn = false;
-                bool forceSwitchOff = false;
             } click;
             struct
             {
@@ -113,10 +128,16 @@ public:
                 KeyNode keyNode;
                 QPointF speedRatio = { 1.0, 1.0 };
             } rotaryTable;
+            struct
+            {
+                KeyNode accurate;
+                KeyMapType accurateType = KMT_INVALID;
+                KeyNode mouse;
+                KeyMapType mouseType = KMT_INVALID;
+            } dualMode;
             DATA() {}
             ~DATA() {}
         } data;
-
         KeyMapNode() {}
         ~KeyMapNode() {}
     };
@@ -155,6 +176,7 @@ private:
     bool checkForDrag(const QJsonObject &node);
     bool checkForAndroidKey(const QJsonObject &node);
     bool checkForRotaryTable(const QJsonObject &node);
+    bool checkForDualMode(const QJsonObject &node);
 
     // get keymap from json object
     QString getItemString(const QJsonObject &node, const QString &name);
@@ -166,6 +188,8 @@ private:
     KeyMapType getItemKeyMapType(const QJsonObject &node, const QString &name);
 
     void setSteerWheelSwitchMode(const QJsonObject &node, KeyMap::KeyMapNode &keyMapNode);
+
+    void setClickMapNode(KeyMapNode &keyMapNode, const QJsonObject &node, const KeyMapType &type, const QString& dualMode);
 
 private:
     static QString s_keyMapPath;
@@ -189,6 +213,16 @@ private:
     // reverse map of key/mouse event
     QMultiHash<int, KeyMapNode *> m_rmapKey;
     QMultiHash<int, KeyMapNode *> m_rmapMouse;
+    void setCommonProperties(const QJsonObject &node, KeyMap::KeyMapNode &keyMapNode);
+    void setClickTwiceMapNode(KeyMapNode &keyMapNode, const QJsonObject &node, const KeyMapType &type, const QString& dualMode);
+    void setClickMultiMapNode(KeyMapNode &keyMapNode, const QJsonObject &node, const KeyMapType &type, const QString& dualMode);
+    void setSteerWheelMapNode(KeyMapNode &keyMapNode, const QJsonObject &node, const KeyMapType &type);
+    void setDragMapNode(KeyMapNode &keyMapNode, const QJsonObject &node, const KeyMapType &type, QString dualMode);
+    void setAndroidKeyMapNode(KeyMapNode &keyMapNode, const QJsonObject &node, const KeyMapType &type, QString string);
+    void setRotaryTableMapNode(KeyMapNode &keyMapNode, const QJsonObject &node, const KeyMapType &type, QString dualMode);
+    void setDualModeMapNode(KeyMap::KeyMapNode &keyMapNode, const QJsonObject &node, const KeyMap::KeyMapType &type);
+    void setKeyMapNode(const QJsonObject &node, KeyMapNode &keyMapNode, const QString& dualMode);
+    static void setDualMode(KeyMapNode &node, const QString &qString, KeyNode &keyNode, KeyMapType type);
 };
 
 #endif // KEYMAP_H

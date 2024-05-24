@@ -4,8 +4,8 @@
 #include <QPointF>
 #include <QQueue>
 #include <QApplication>
-#include <QWidget>
 #include <QScreen>
+#include <QWidget>
 
 #include "inputconvertnormal.h"
 #include "keymap.h"
@@ -53,7 +53,7 @@ protected:
     void processKeyDrag(const QPointF &startPos, QPointF endPos, const QKeyEvent *from);
 
     // android key
-    void processAndroidKey(AndroidKeycode androidKey, const QKeyEvent *from);
+    void processAndroidKey(AndroidKeycode androidKey, const QEvent *from);
 
     // mouse
     bool processMouseClick(const QMouseEvent *from);
@@ -134,8 +134,11 @@ private:
         bool wheeling = false;
         int wheelDelayUpTime = 0;
     } m_dragDelayData;
-    void processRotaryTable(KeyMap::KeyMapNode type, const QKeyEvent *constpos);
-    void switchMouse(bool switchMap, bool forceSwitchOn,bool forceSwitchOff, const QKeyEvent *from);
+    void processRotaryTable(const KeyMap::KeyMapNode& node, const QKeyEvent *constpos);
+    void switchMouse(const KeyMap::KeyMapNode &node, const QKeyEvent *from);
+    void processDualMode(KeyMap::KeyMapNode node, const QKeyEvent *from);
+    void processType(KeyMap::KeyMapNode node, const QKeyEvent *from);
+    void setMousePos(bool b, const KeyMap::KeyMapNode& node);
 };
 
 #endif // INPUTCONVERTGAME_H
