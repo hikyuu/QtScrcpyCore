@@ -6,6 +6,11 @@
 #include <QTimer>
 
 #include "inputconvertgame.h"
+#include <QHash>
+#include <QHashData>
+#include <QHashDummyValue>
+#include <QLine>
+#include <QLineF>
 #include <Windows.h>
 
 #define CURSOR_POS_CHECK 50
@@ -121,7 +126,6 @@ void InputConvertGame::keyEvent(const QKeyEvent *from, const QSize &frameSize, c
         // small eyes
         if (m_keyMap.isValidMouseMoveMap() && from->key() == m_keyMap.getMouseMoveMap().data.mouseMove.smallEyes.key) {
             m_ctrlMouseMove.smallEyes = (QEvent::KeyPress == from->type());
-
             if (QEvent::KeyPress == from->type()) {
                 m_processMouseMove = false;
                 m_currentSpeedRatio = QPointF(5, 2.5);
@@ -375,24 +379,24 @@ void InputConvertGame::onSteerWheelTimer()
 void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const QKeyEvent *from)
 {
     int key = from->key();
-    bool flag = from->type() == QEvent::KeyPress;
+    bool keyPress = from->type() == QEvent::KeyPress;
 
-    if (flag && key == node.data.steerWheel.switchKey.key) {
+    if (keyPress && key == node.data.steerWheel.switchKey.key) {
         m_ctrlSteerWheel.clickMode = !m_ctrlSteerWheel.clickMode;
         return;
     }
     // identify keys
     if (key == node.data.steerWheel.up.key) {
-        m_ctrlSteerWheel.pressedUp = flag;
+        m_ctrlSteerWheel.pressedUp = keyPress;
         m_ctrlSteerWheel.clickPos = node.data.steerWheel.up.pos;
     } else if (key == node.data.steerWheel.right.key) {
-        m_ctrlSteerWheel.pressedRight = flag;
+        m_ctrlSteerWheel.pressedRight = keyPress;
         m_ctrlSteerWheel.clickPos = node.data.steerWheel.right.pos;
     } else if (key == node.data.steerWheel.down.key) {
-        m_ctrlSteerWheel.pressedDown = flag;
+        m_ctrlSteerWheel.pressedDown = keyPress;
         m_ctrlSteerWheel.clickPos = node.data.steerWheel.down.pos;
     } else { // left
-        m_ctrlSteerWheel.pressedLeft = flag;
+        m_ctrlSteerWheel.pressedLeft = keyPress;
         m_ctrlSteerWheel.clickPos = node.data.steerWheel.left.pos;
     }
     if (m_ctrlSteerWheel.clickMode) {
@@ -445,28 +449,22 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
     m_ctrlSteerWheel.delayData.queuePos.clear();
 
     // first press, get key and touch down
-    if (pressedNum == 1 && flag) {
+    if (pressedNum == 1 && keyPress) {
         m_ctrlSteerWheel.touchKey = from->key();
         int id = attachTouchID(m_ctrlSteerWheel.touchKey);
-        sendTouchDownEvent(id, node.data.steerWheel.centerPos);
-
-        getDelayQueue(
-            node.data.steerWheel.centerPos,
-            node.data.steerWheel.centerPos + offset,
-            0.01f,
-            0.002f,
-            0,
-            1,
-            m_ctrlSteerWheel.delayData.queuePos,
-            m_ctrlSteerWheel.delayData.queueTimer);
+        const QPointF centerPos = shakePos(node.data.steerWheel.centerPos, 0.02, 0.02);
+        //        qDebug() << "steerWheel centerPos:" << centerPos;
+        m_keyPosMap[Qt::Key_sterling] = centerPos;
+        sendTouchDownEvent(id, centerPos);
+        getDelayQueue(centerPos, centerPos + offset, 0.01f, 0.002f, 1, 5, m_ctrlSteerWheel.delayData.queuePos, m_ctrlSteerWheel.delayData.queueTimer);
     } else {
         getDelayQueue(
             m_ctrlSteerWheel.delayData.currentPos,
-            node.data.steerWheel.centerPos + offset,
+            m_keyPosMap[Qt::Key_sterling] + offset,
             0.01f,
             0.002f,
-            0,
             1,
+            3,
             m_ctrlSteerWheel.delayData.queuePos,
             m_ctrlSteerWheel.delayData.queueTimer);
     }
@@ -477,21 +475,28 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
 
 void InputConvertGame::processKeyClick(bool clickTwice, const KeyMap::KeyMapNode &node, const QKeyEvent *from)
 {
-    QPointF clickPos = node.data.click.keyNode.pos;
-
     if (QEvent::KeyPress == from->type()) {
+        qreal x = node.data.click.keyNode.pos.x();
+        qreal y = node.data.click.keyNode.pos.y();
+        qreal shakeX = QRandomGenerator::global()->bounded(0.01) - 0.01;
+        qreal shakeY = QRandomGenerator::global()->bounded(0.01) - 0.01;
+        //        qDebug() << "shakeX:" << shakeX << " shakeY:" << shakeY;
+        QPointF shakePos(x + shakeX, y + shakeY);
+        m_keyPosMap[from->key()] = shakePos;
         int id = attachTouchID(from->key());
-        sendTouchDownEvent(id, clickPos);
+        sendTouchDownEvent(id, shakePos);
+        //        qDebug() << "touch down shakePos:" << shakePos;
         if (clickTwice) {
-            sendTouchUpEvent(getTouchID(from->key()), clickPos);
+            sendTouchUpEvent(getTouchID(from->key()), shakePos);
             detachTouchID(from->key());
         }
     } else if (QEvent::KeyRelease == from->type()) {
         if (clickTwice) {
             int id = attachTouchID(from->key());
-            sendTouchDownEvent(id, clickPos);
+            sendTouchDownEvent(id, m_keyPosMap[from->key()]);
         }
-        sendTouchUpEvent(getTouchID(from->key()), clickPos);
+        //        qDebug() << "touch up shakePos:" << m_keyPosMap[from->key()];
+        sendTouchUpEvent(getTouchID(from->key()), m_keyPosMap[from->key()]);
         detachTouchID(from->key());
     }
 }
@@ -525,15 +530,17 @@ void InputConvertGame::processKeyClickMulti(const KeyMap::DelayClickNode *nodes,
     QPointF clickPos;
 
     for (int i = 0; i < count; i++) {
+        delay += QRandomGenerator::global()->bounded(nodes[i].delay, nodes[i].delay + 10);
         delay += nodes[i].delay;
-        clickPos = nodes[i].pos;
+        clickPos = shakePos(nodes[i].pos, 0.01, 0.01);
         QTimer::singleShot(delay, this, [this, key, clickPos]() {
             int id = attachTouchID(key);
             sendTouchDownEvent(id, clickPos);
         });
 
         // Don't up it too fast
-        delay += 20;
+        delay += QRandomGenerator::global()->bounded(20, 30);
+
         QTimer::singleShot(delay, this, [this, key, clickPos]() {
             int id = getTouchID(key);
             sendTouchUpEvent(id, clickPos);
@@ -630,7 +637,7 @@ void InputConvertGame::processAndroidKey(AndroidKeycode androidKey, const QEvent
 
 bool InputConvertGame::processMouseClick(const QMouseEvent *from)
 {
-    const KeyMap::KeyMapNode node = m_keyMap.getKeyMapNodeMouse(from->button());
+    KeyMap::KeyMapNode node = m_keyMap.getKeyMapNodeMouse(from->button());
     if (KeyMap::KMT_INVALID == node.type) {
         return false;
     }
@@ -652,7 +659,14 @@ bool InputConvertGame::processMouseClick(const QMouseEvent *from)
         }
         if (QEvent::MouseButtonPress == from->type() || QEvent::MouseButtonDblClick == from->type()) {
             int id = attachTouchID(from->button());
-            sendTouchDownEvent(id, node.data.click.keyNode.pos);
+            qreal x = node.data.click.keyNode.pos.x();
+            qreal y = node.data.click.keyNode.pos.y();
+            qreal shakeX = QRandomGenerator::global()->bounded(0.01) - 0.01;
+            qreal shakeY = QRandomGenerator::global()->bounded(0.01) - 0.01;
+            //            qDebug() << "shakeX:" << shakeX << " shakeY:" << shakeY;
+            m_keyPosMap[from->button()] = QPointF(x + shakeX, y + shakeY);
+            //            qDebug() << " touch down shakePos:" << m_keyPosMap[from->button()];
+            sendTouchDownEvent(id, m_keyPosMap[from->button()]);
             if (node.freshMouseMove) {
                 mouseMoveStopTouch();
             }
@@ -660,7 +674,8 @@ bool InputConvertGame::processMouseClick(const QMouseEvent *from)
         }
         if (QEvent::MouseButtonRelease == from->type()) {
             int id = getTouchID(from->button());
-            sendTouchUpEvent(id, node.data.click.keyNode.pos);
+            qDebug() << "touch up shakePos:" << m_keyPosMap[from->button()];
+            sendTouchUpEvent(id, m_keyPosMap[from->button()]);
             detachTouchID(from->button());
             return true;
         }
@@ -757,8 +772,11 @@ void InputConvertGame::mouseMoveStartTouch(const QMouseEvent *from, const QPoint
     QPointF mouseMoveStartPos;
     if (!m_ctrlMouseMove.touching) {
         if (pos.isNull()) {
-            mouseMoveStartPos
-                = m_ctrlMouseMove.smallEyes ? m_keyMap.getMouseMoveMap().data.mouseMove.smallEyes.pos : m_keyMap.getMouseMoveMap().data.mouseMove.startPos;
+            if (m_ctrlMouseMove.smallEyes) {
+                mouseMoveStartPos = shakePos(m_keyMap.getMouseMoveMap().data.mouseMove.smallEyes.pos, 0.1, 0.05);
+            } else {
+                mouseMoveStartPos = shakePos(m_keyMap.getMouseMoveMap().data.mouseMove.startPos, 0.02, 0.01);
+            }
         } else {
             mouseMoveStartPos = pos;
         }
@@ -767,6 +785,15 @@ void InputConvertGame::mouseMoveStartTouch(const QMouseEvent *from, const QPoint
         m_ctrlMouseMove.lastConvertPos = mouseMoveStartPos;
         m_ctrlMouseMove.touching = true;
     }
+}
+QPointF InputConvertGame::shakePos(QPointF pos, double offsetX, double offsetY)
+{
+    qreal x = pos.x();
+    qreal y = pos.y();
+    qreal shakeX = QRandomGenerator::global()->bounded(offsetX * 2) - offsetX;
+    qreal shakeY = QRandomGenerator::global()->bounded(offsetY * 2) - offsetY;
+    qDebug() << "shakeX:" << shakeX << " shakeY:" << shakeY;
+    return { x + shakeX, y + shakeY };
 }
 
 void InputConvertGame::mouseMoveStopTouch()

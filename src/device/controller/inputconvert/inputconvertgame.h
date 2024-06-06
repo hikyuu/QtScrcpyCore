@@ -1,9 +1,9 @@
 #ifndef INPUTCONVERTGAME_H
 #define INPUTCONVERTGAME_H
 
+#include <QApplication>
 #include <QPointF>
 #include <QQueue>
-#include <QApplication>
 #include <QScreen>
 #include <QWidget>
 
@@ -68,10 +68,15 @@ protected:
     bool checkCursorPos(const QMouseEvent *from);
     void hideMouseCursor(bool hide);
 
-    void getDelayQueue(const QPointF& start, const QPointF& end,
-                       const double& distanceStep, const double& posStepconst,
-                       quint32 lowestTimer, quint32 highestTimer,
-                       QQueue<QPointF>& queuePos, QQueue<quint32>& queueTimer);
+    void getDelayQueue(
+        const QPointF &start,
+        const QPointF &end,
+        const double &distanceStep,
+        const double &posStepconst,
+        quint32 lowestTimer,
+        quint32 highestTimer,
+        QQueue<QPointF> &queuePos,
+        QQueue<quint32> &queueTimer);
 signals:
     void mouseCursorHided(bool hide);
 
@@ -90,6 +95,7 @@ private:
     bool m_needBackMouseMove = false;
     int m_multiTouchID[MULTI_TOUCH_MAX_NUM] = { 0 };
     KeyMap m_keyMap;
+    QMap<int, QPointF> m_keyPosMap;
     QPointF m_currentSpeedRatio;
     bool m_processMouseMove = true;
     // steer wheel
@@ -104,9 +110,10 @@ private:
         bool clickMode = false;
         QPointF clickPos;
         // for delay
-        struct {
+        struct
+        {
             QPointF currentPos;
-            QTimer* timer = nullptr;
+            QTimer *timer = nullptr;
             QQueue<QPointF> queuePos;
             QQueue<quint32> queueTimer;
             int pressedNum = 0;
@@ -125,20 +132,22 @@ private:
     } m_ctrlMouseMove;
 
     // for drag delay
-    struct {
+    struct
+    {
         QPointF currentPos;
-        QTimer* timer = nullptr;
+        QTimer *timer = nullptr;
         QQueue<QPointF> queuePos;
         QQueue<quint32> queueTimer;
         int pressKey = 0;
         bool wheeling = false;
         int wheelDelayUpTime = 0;
     } m_dragDelayData;
-    void processRotaryTable(const KeyMap::KeyMapNode& node, const QKeyEvent *constpos);
+    void processRotaryTable(const KeyMap::KeyMapNode &node, const QKeyEvent *constpos);
     void switchMouse(const KeyMap::KeyMapNode &node, const QKeyEvent *from);
     void processDualMode(KeyMap::KeyMapNode node, const QKeyEvent *from);
     void processType(KeyMap::KeyMapNode node, const QKeyEvent *from);
-    void setMousePos(bool b, const KeyMap::KeyMapNode& node);
+    void setMousePos(bool b, const KeyMap::KeyMapNode &node);
+    static QPointF shakePos(QPointF pos, double offsetX, double offsetY);
 };
 
 #endif // INPUTCONVERTGAME_H
