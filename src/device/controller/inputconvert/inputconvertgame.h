@@ -148,6 +148,8 @@ private:
     void processType(KeyMap::KeyMapNode node, const QKeyEvent *from);
     void setMousePos(bool b, const KeyMap::KeyMapNode &node);
     static QPointF shakePos(QPointF pos, double offsetX, double offsetY);
+    void processPressRelease(KeyMap::KeyMapNode node, const QKeyEvent *from);
+    void switchMouse(const KeyMap::KeyMapNode &node, bool forceSwitchOn, bool forceSwitchOff);
 };
 
 #endif // INPUTCONVERTGAME_H

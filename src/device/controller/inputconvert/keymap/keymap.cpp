@@ -173,7 +173,7 @@ parseError:
     }
     return;
 }
-void KeyMap::setKeyMapNode(const QJsonObject &node, KeyMapNode &keyMapNode, const QString& dualMode)
+void KeyMap::setKeyMapNode(const QJsonObject &node, KeyMapNode &keyMapNode, const QString &dualMode)
 {
     KeyMap::KeyMapType type = getItemKeyMapType(node, "type");
     switch (type) {
@@ -201,14 +201,18 @@ void KeyMap::setKeyMapNode(const QJsonObject &node, KeyMapNode &keyMapNode, cons
     case KMT_DUAL_MODE: {
         setDualModeMapNode(keyMapNode, node, type);
     } break;
+    case KMT_PRESS_RELEASE: {
+        setPressReleaseMapNode(keyMapNode, node, type, dualMode);
+    } break;
     default:
         qWarning() << "json error: keyMapNodes invalid node type:" << node.value("type").toString();
     }
 }
-void KeyMap::setDualModeMapNode(KeyMap::KeyMapNode &keyMapNode, const QJsonObject &node, const KeyMap::KeyMapType &type)
+
+void KeyMap::setPressReleaseMapNode(KeyMap::KeyMapNode &keyMapNode, const QJsonObject &node, KeyMap::KeyMapType type, const QString &dualMode)
 {
-    if (!checkForDualMode(node)) {
-        qWarning() << "json error: keyMapNodes node format error"<<node;
+    if (!checkForPressRelease(node)) {
+        qWarning() << "json error: keyMapNodes node format error" << node;
         return;
     }
     QPair<ActionType, int> key = getItemKey(node, "key");
@@ -216,12 +220,33 @@ void KeyMap::setDualModeMapNode(KeyMap::KeyMapNode &keyMapNode, const QJsonObjec
         qWarning() << "json error: keyMapNodes node invalid key: " << node.value("key").toString();
         return;
     }
-    QJsonObject accurateNode = node.value("accurate").toObject();;
+    keyMapNode.type = type;
+    keyMapNode.data.pressRelease.keyNode.type = key.first;
+    keyMapNode.data.pressRelease.keyNode.key = key.second;
+    keyMapNode.data.pressRelease.pressPos = getItemPos(node, "pressPos");
+    keyMapNode.data.pressRelease.releasePos = getItemPos(node, "releasePos");
+    keyMapNode.switchMap = true;
+}
+
+void KeyMap::setDualModeMapNode(KeyMap::KeyMapNode &keyMapNode, const QJsonObject &node, const KeyMap::KeyMapType &type)
+{
+    if (!checkForDualMode(node)) {
+        qWarning() << "json error: keyMapNodes node format error" << node;
+        return;
+    }
+    QPair<ActionType, int> key = getItemKey(node, "key");
+    if (key.first == AT_INVALID) {
+        qWarning() << "json error: keyMapNodes node invalid key: " << node.value("key").toString();
+        return;
+    }
+    QJsonObject accurateNode = node.value("accurate").toObject();
+    ;
     if (!accurateNode.contains("type") || !accurateNode.value("type").isString()) {
         qWarning() << "json error: DualModeKeyMapNode accurateNode have not find node type";
         return;
     }
-    QJsonObject mouse = node.value("mouse").toObject();;
+    QJsonObject mouse = node.value("mouse").toObject();
+    ;
     if (!accurateNode.contains("type") || !accurateNode.value("type").isString()) {
         qWarning() << "json error: DualModeKeyMapNode mouse have not find node type";
         return;
@@ -238,7 +263,7 @@ void KeyMap::setDualModeMapNode(KeyMap::KeyMapNode &keyMapNode, const QJsonObjec
 void KeyMap::setRotaryTableMapNode(KeyMapNode &keyMapNode, const QJsonObject &node, const KeyMapType &type, const QString dualMode)
 {
     if (!checkForRotaryTable(node)) {
-        qWarning() << "json error: KMT_ROTARY_TABLE keyMapNodes node format error"<<node;
+        qWarning() << "json error: KMT_ROTARY_TABLE keyMapNodes node format error" << node;
         return;
     }
     QPair<ActionType, int> key = getItemKey(node, "key");
@@ -280,7 +305,7 @@ void KeyMap::setAndroidKeyMapNode(KeyMapNode &keyMapNode, const QJsonObject &nod
     keyMapNode.data.androidKey.keyNode.type = key.first;
     keyMapNode.data.androidKey.keyNode.key = key.second;
     keyMapNode.data.androidKey.keyNode.androidKey = static_cast<AndroidKeycode>(static_cast<int>(getItemDouble(node, "androidKey")));
-//    qDebug() << keyMapNode.data.androidKey.keyNode.androidKey;
+    //    qDebug() << keyMapNode.data.androidKey.keyNode.androidKey;
     setCommonProperties(node, keyMapNode);
     setDualMode(keyMapNode, string, keyMapNode.data.androidKey.keyNode, type);
 }
@@ -316,7 +341,7 @@ void KeyMap::setSteerWheelMapNode(KeyMapNode &keyMapNode, const QJsonObject &nod
     QPair<ActionType, int> rightKey = getItemKey(node, "rightKey");
     QPair<ActionType, int> upKey = getItemKey(node, "upKey");
     QPair<ActionType, int> downKey = getItemKey(node, "downKey");
-    
+
     if (leftKey.first == AT_INVALID) {
         qWarning() << "json error: keyMapNodes node invalid key: " << node.value("leftKey").toString();
         return;
@@ -333,7 +358,7 @@ void KeyMap::setSteerWheelMapNode(KeyMapNode &keyMapNode, const QJsonObject &nod
         qWarning() << "json error: keyMapNodes node invalid key: " << node.value("downKey").toString();
         return;
     }
-    
+
     keyMapNode.type = type;
 
     keyMapNode.data.steerWheel.left = { leftKey.first, leftKey.second, QPointF(0, 0), QPointF(0, 0), getItemDouble(node, "leftOffset") };
@@ -346,7 +371,7 @@ void KeyMap::setSteerWheelMapNode(KeyMapNode &keyMapNode, const QJsonObject &nod
     setSteerWheelSwitchMode(node, keyMapNode);
     m_idxSteerWheel = m_keyMapNodes.size();
 }
-void KeyMap::setClickMultiMapNode(KeyMapNode &keyMapNode, const QJsonObject &node, const KeyMapType &type, const QString& dualMode)
+void KeyMap::setClickMultiMapNode(KeyMapNode &keyMapNode, const QJsonObject &node, const KeyMapType &type, const QString &dualMode)
 {
     if (!checkForClickMulti(node)) {
         qWarning() << "json error: KMT_CLICK_MULTI keyMapNodes node format error";
@@ -381,7 +406,7 @@ void KeyMap::setClickMultiMapNode(KeyMapNode &keyMapNode, const QJsonObject &nod
     setCommonProperties(node, keyMapNode);
     setDualMode(keyMapNode, dualMode, keyMapNode.data.clickMulti.keyNode, type);
 }
-void KeyMap::setClickTwiceMapNode(KeyMapNode &keyMapNode, const QJsonObject &node, const KeyMapType &type, const QString& dualMode)
+void KeyMap::setClickTwiceMapNode(KeyMapNode &keyMapNode, const QJsonObject &node, const KeyMapType &type, const QString &dualMode)
 {
     if (!checkForClickTwice(node)) {
         qWarning() << "json error: KMT_CLICK_TWICE keyMapNodes node format error";
@@ -402,7 +427,7 @@ void KeyMap::setClickTwiceMapNode(KeyMapNode &keyMapNode, const QJsonObject &nod
     setDualMode(keyMapNode, dualMode, keyMapNode.data.click.keyNode, type);
 }
 
-void KeyMap::setClickMapNode(KeyMapNode &keyMapNode, const QJsonObject &node, const KeyMapType &type, const QString& dualMode)
+void KeyMap::setClickMapNode(KeyMapNode &keyMapNode, const QJsonObject &node, const KeyMapType &type, const QString &dualMode)
 {
     if (!checkForClick(node)) {
         qWarning() << "json error: KMT_CLICK keyMapNodes node format error";
@@ -475,7 +500,7 @@ void KeyMap::setSteerWheelSwitchMode(const QJsonObject &node, KeyMap::KeyMapNode
     keyMapNode.data.steerWheel.right.pos = getItemPos(node, "rightClickPos");
     keyMapNode.data.steerWheel.up.pos = getItemPos(node, "upClickPos");
     keyMapNode.data.steerWheel.down.pos = getItemPos(node, "downClickPos");
-    keyMapNode.data.steerWheel.switchKey = { switchKey.first, switchKey.second};
+    keyMapNode.data.steerWheel.switchKey = { switchKey.first, switchKey.second };
 }
 
 const KeyMap::KeyMapNode &KeyMap::getKeyMapNode(int key)
@@ -568,6 +593,10 @@ void KeyMap::makeReverseMap()
         case KMT_DUAL_MODE: {
             QMultiHash<int, KeyMapNode *> &m = node.data.dualMode.accurate.type == AT_KEY ? m_rmapKey : m_rmapMouse;
             m.insert(node.data.dualMode.accurate.key, &node);
+        } break;
+        case KMT_PRESS_RELEASE: {
+            QMultiHash<int, KeyMapNode *> &m = node.data.pressRelease.keyNode.type == AT_KEY ? m_rmapKey : m_rmapMouse;
+            m.insert(node.data.pressRelease.keyNode.key, &node);
         } break;
         default:
             break;
@@ -723,18 +752,20 @@ bool KeyMap::checkForRotaryTable(const QJsonObject &node)
 
 bool KeyMap::checkForDualMode(const QJsonObject &node)
 {
-    return checkItemString(node, "key")
-           && checkItemObject(node, "accurate")
-           && checkItemObject(node, "mouse");
+    return checkItemString(node, "key") && checkItemObject(node, "accurate") && checkItemObject(node, "mouse");
 }
-void KeyMap::setDualMode(KeyMapNode &node, const QString &qString, KeyNode &keyNode, const KeyMapType type)
+void KeyMap::setDualMode(KeyMapNode &node, const QString &dualMode, KeyNode &keyNode, const KeyMapType type)
 {
-    if (qString.contains("accurate")) {
+    if (dualMode.contains("accurate")) {
         node.data.dualMode.accurate = keyNode;
         node.data.dualMode.accurateType = type;
     }
-    if (qString.contains("mouse")) {
+    if (dualMode.contains("mouse")) {
         node.data.dualMode.mouse = keyNode;
         node.data.dualMode.mouseType = type;
     }
+}
+bool KeyMap::checkForPressRelease(const QJsonObject &node)
+{
+    return checkItemString(node, "key") && checkItemPos(node, "pressPos") && checkItemPos(node, "releasePos");
 }

@@ -29,7 +29,7 @@ private:
     bool m_forward = false;
     QTcpSocket *m_socket; // tcp套接字
     QString m_serial;
-    QWidget *window;    // 父窗口指针
+    QWidget *window; // 父窗口指针
     QPointer<Mouse> m_mouse = Q_NULLPTR;
     //true为hide,false为show
     bool m_hideMouseCursor = false;
@@ -47,7 +47,7 @@ protected:
 
 public slots:
     void onMouseEvent(const QMouseEvent *from, const QSize &frameSize, const QSize &showSize);
-    void sendMousePos(QPointF f,bool gameMap);
+    void sendMousePos(QPointF f, bool gameMap);
     void onHideMouseCursor(bool hide);
     void onAdbProcessResult(qsc::AdbProcess::ADB_EXEC_RESULT processResult);
     bool disableTunnelForward();

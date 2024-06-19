@@ -1,6 +1,7 @@
 #include "mouse.h"
 #include "adbprocess.h"
-#include <tchar.h>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 Mouse::Mouse(QObject *parent, qsc::DeviceParams params) : QThread(parent)
 {
@@ -71,12 +72,14 @@ void Mouse::onMouseEvent(const QMouseEvent *from, const QSize &frameSize, const 
 
 void Mouse::sendMousePos(QPointF pos, bool gameMap)
 {
-    QStringList posList;
-    posList << QString::number(static_cast<int>(pos.x())) << QString::number(static_cast<int>(pos.y()));
-    posList.append(gameMap ? "1" : "0");
-
-    // 将字符串转换为字节数组
-    QByteArray data = posList.join(",").append("\n").toUtf8();
+    QJsonObject json = {
+        { "x", int(pos.x()) },
+        { "y", int(pos.y()) },
+        { "gameMap", gameMap },
+    };
+    QJsonDocument doc(json);
+    QByteArray data = doc.toJson(QJsonDocument::Compact);
+    data.push_back('\n');
     // 向服务端发送
     m_socket->write(data);
     m_socket->flush();

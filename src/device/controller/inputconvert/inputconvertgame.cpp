@@ -97,7 +97,9 @@ void InputConvertGame::wheelEvent(const QWheelEvent *from, const QSize &frameSiz
 
 void InputConvertGame::keyEvent(const QKeyEvent *from, const QSize &frameSize, const QSize &showSize)
 {
-
+    if (!from || from->isAutoRepeat()) {
+        return;
+    }
     // 处理开关按键
     if (m_keyMap.isSwitchOnKeyboard() && m_keyMap.getSwitchKey() == from->key()) {
         if (QEvent::KeyPress != from->type()) {
@@ -111,6 +113,7 @@ void InputConvertGame::keyEvent(const QKeyEvent *from, const QSize &frameSize, c
 
     const KeyMap::KeyMapNode &node = m_keyMap.getKeyMapNodeKey(from->key());
     //    qDebug() <<"buttonType: "<< node.type;
+
     // 处理特殊按键：可以释放出鼠标的按键
     if (m_gameMap && node.switchMap) {
         updateSize(frameSize, showSize);
@@ -120,9 +123,6 @@ void InputConvertGame::keyEvent(const QKeyEvent *from, const QSize &frameSize, c
 
     if (m_gameMap) {
         updateSize(frameSize, showSize);
-        if (!from || from->isAutoRepeat()) {
-            return;
-        }
         // small eyes
         if (m_keyMap.isValidMouseMoveMap() && from->key() == m_keyMap.getMouseMoveMap().data.mouseMove.smallEyes.key) {
             m_ctrlMouseMove.smallEyes = (QEvent::KeyPress == from->type());
@@ -179,6 +179,9 @@ void InputConvertGame::processType(KeyMap::KeyMapNode node, const QKeyEvent *fro
         return;
     case KeyMap::KMT_DUAL_MODE:
         processDualMode(node, from);
+        return;
+    case KeyMap::KMT_PRESS_RELEASE:
+        processPressRelease(node, from);
         return;
     default:
         break;
@@ -502,6 +505,10 @@ void InputConvertGame::switchMouse(const KeyMap::KeyMapNode &node, const QKeyEve
     bool switchMap = node.switchMap;
     if (!switchMap || QEvent::KeyRelease != from->type())
         return;
+    switchMouse(node, forceSwitchOn, forceSwitchOff);
+}
+void InputConvertGame::switchMouse(const KeyMap::KeyMapNode &node, bool forceSwitchOn, bool forceSwitchOff)
+{
     // 只显示鼠标不关闭鼠标
     if (forceSwitchOn && m_needBackMouseMove)
         return;
@@ -899,11 +906,11 @@ void InputConvertGame::setMousePos(bool b, const KeyMap::KeyMapNode &node)
             if (activeWindow->isFullScreen()) {
                 QCursor::setPos(point);
             } else {
-                QCursor::setPos(activeWindow->mapToGlobal(point));
+                QCursor::setPos(activeWindow->mapToGlobal(activeWindow->rect().center()));
             }
         } else {
             if (activeWindow->isFullScreen()) {
-                qDebug() << "fs setPos" << m_showSize;
+                //                qDebug() << "fs setPos" << m_showSize;
                 QCursor::setPos(m_showSize.width() / 2, m_showSize.height() / 2);
             } else {
                 QPoint center = activeWindow->mapToGlobal(activeWindow->rect().center());
@@ -952,4 +959,33 @@ void InputConvertGame::processDualMode(KeyMap::KeyMapNode node, const QKeyEvent 
         node.type = node.data.dualMode.accurateType;
     }
     processType(node, from);
+}
+void InputConvertGame::processPressRelease(KeyMap::KeyMapNode node, const QKeyEvent *from)
+{
+    int key = from->key();
+    if (QEvent::KeyPress == from->type()) {
+        qDebug() << "press";
+        switchMouse(node, true, false);
+        QPointF processedPos = shakePos(node.data.pressRelease.pressPos, 0.01, 0.01);
+        int id = attachTouchID(key);
+        sendTouchDownEvent(id, processedPos);
+        int delay = QRandomGenerator::global()->bounded(20, 30);
+        QTimer::singleShot(delay, this, [this, key, processedPos]() {
+            int id = getTouchID(key);
+            sendTouchUpEvent(id, processedPos);
+            detachTouchID(key);
+        });
+    } else if (QEvent::KeyRelease == from->type()) {
+        qDebug() << "release";
+        QPointF processedPos = shakePos(node.data.pressRelease.releasePos, 0.01, 0.01);
+        int id = attachTouchID(key);
+        sendTouchDownEvent(id, processedPos);
+        int delay = QRandomGenerator::global()->bounded(20, 30);
+        QTimer::singleShot(delay, this, [this, key, processedPos]() {
+            int id = getTouchID(key);
+            sendTouchUpEvent(id, processedPos);
+            detachTouchID(key);
+        });
+        switchMouse(node, false, true);
+    }
 }
