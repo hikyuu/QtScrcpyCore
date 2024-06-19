@@ -240,13 +240,11 @@ void KeyMap::setDualModeMapNode(KeyMap::KeyMapNode &keyMapNode, const QJsonObjec
         return;
     }
     QJsonObject accurateNode = node.value("accurate").toObject();
-    ;
     if (!accurateNode.contains("type") || !accurateNode.value("type").isString()) {
         qWarning() << "json error: DualModeKeyMapNode accurateNode have not find node type";
         return;
     }
     QJsonObject mouse = node.value("mouse").toObject();
-    ;
     if (!accurateNode.contains("type") || !accurateNode.value("type").isString()) {
         qWarning() << "json error: DualModeKeyMapNode mouse have not find node type";
         return;
