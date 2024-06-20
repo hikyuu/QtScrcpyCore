@@ -906,7 +906,7 @@ void InputConvertGame::setMousePos(bool b, const KeyMap::KeyMapNode &node)
             if (activeWindow->isFullScreen()) {
                 QCursor::setPos(point);
             } else {
-                QCursor::setPos(activeWindow->mapToGlobal(activeWindow->rect().center()));
+                QCursor::setPos(activeWindow->mapToGlobal(point));
             }
         } else {
             if (activeWindow->isFullScreen()) {
