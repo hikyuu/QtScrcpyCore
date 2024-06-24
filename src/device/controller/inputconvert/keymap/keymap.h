@@ -31,6 +31,9 @@ public:
         KMT_ROTARY_TABLE,
         KMT_DUAL_MODE,
         KMT_PRESS_RELEASE,
+        KMT_MOBA_WHEEL,
+        KMT_MOBA_SKILL,
+        KMT_BURST_CLICK
     };
     Q_ENUM(KeyMapType)
 
@@ -139,6 +142,23 @@ public:
                 QPointF pressPos = { 0.0, 0.0 };
                 QPointF releasePos = { 0.0, 0.0 };
             } pressRelease;
+            struct {
+                KeyNode keyNode;
+                QPointF centerPos = {0.0, 0.0};
+                QPointF wheelPos = {0.2, 0.75};
+                double speedRatio = 3.0;
+                double skillOffset = 1.0;
+            } mobaWheel;
+            struct {
+                KeyNode keyNode;
+                double speedRatio = 3.0;
+                bool stopMove = false;
+                bool quickCast = false;
+            } mobaSkill;
+            struct {
+                KeyNode keyNode;
+                double rate = 10;
+            } burstClick;
             DATA() {}
             ~DATA() {}
         } data;
@@ -158,6 +178,9 @@ public:
 
     bool isValidMouseMoveMap();
     bool isValidSteerWheelMap();
+
+    bool isValidMobaWheel();
+
     const KeyMap::KeyMapNode &getMouseMoveMap();
 
 private:
@@ -207,6 +230,9 @@ private:
     // steer wheel index
     int m_idxSteerWheel = -1;
 
+    // moba wheel index
+    bool m_isValidMobaWheel = false;
+
     // mouse move index
     int m_idxMouseMove = -1;
 
@@ -229,6 +255,20 @@ private:
     static void setDualMode(KeyMapNode &node, const QString &dualMode, KeyNode &keyNode, KeyMapType type);
     void setPressReleaseMapNode(KeyMapNode &node, const QJsonObject &object, KeyMapType type, const QString &dualMode);
     bool checkForPressRelease(const QJsonObject &node);
+
+    bool checkForMobaWheel(const QJsonObject &node);
+
+    void setMobaWheelMapNode(const QJsonObject &node, KeyMapNode mapNode);
+
+    void setMobaWheelMapNode(KeyMapNode &keyMapNode, const QJsonObject &node, const KeyMapType &type);
+
+    void setMobaSkillMapNode(KeyMapNode &keyMapNode, const QJsonObject &node, KeyMapType type);
+
+    bool checkForMobaSkill(const QJsonObject &node);
+
+    void setBurstClickMapNode(KeyMap::KeyMapNode &keyMapNode, const QJsonObject &node, KeyMap::KeyMapType type);
+
+    bool checkForBurstClick(const QJsonObject &node);
 };
 
 #endif // KEYMAP_H
