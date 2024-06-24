@@ -204,6 +204,15 @@ void KeyMap::setKeyMapNode(const QJsonObject &node, KeyMapNode &keyMapNode, cons
     case KMT_PRESS_RELEASE: {
         setPressReleaseMapNode(keyMapNode, node, type, dualMode);
     } break;
+    case KMT_MOBA_WHEEL: {
+        setMobaWheelMapNode(keyMapNode, node, type);
+    }break;
+    case KMT_MOBA_SKILL: {
+        setMobaSkillMapNode(keyMapNode, node, type);
+    }break;
+    case KMT_BURST_CLICK:{
+        setBurstClickMapNode(keyMapNode, node, type);
+    }break;
     default:
         qWarning() << "json error: keyMapNodes invalid node type:" << node.value("type").toString();
     }
@@ -226,6 +235,9 @@ void KeyMap::setPressReleaseMapNode(KeyMap::KeyMapNode &keyMapNode, const QJsonO
     keyMapNode.data.pressRelease.pressPos = getItemPos(node, "pressPos");
     keyMapNode.data.pressRelease.releasePos = getItemPos(node, "releasePos");
     keyMapNode.switchMap = true;
+    if (checkItemBool(node, "switchMap")) {
+        keyMapNode.switchMap = getItemBool(node, "switchMap");
+    }
 }
 
 void KeyMap::setDualModeMapNode(KeyMap::KeyMapNode &keyMapNode, const QJsonObject &node, const KeyMap::KeyMapType &type)
@@ -545,12 +557,15 @@ bool KeyMap::isValidSteerWheelMap()
     return m_idxSteerWheel != -1;
 }
 
+bool KeyMap::isValidMobaWheel() {
+    return m_isValidMobaWheel;
+}
+
 void KeyMap::makeReverseMap()
 {
     m_rmapKey.clear();
     m_rmapMouse.clear();
-    for (int i = 0; i < m_keyMapNodes.size(); ++i) {
-        auto &node = m_keyMapNodes[i];
+    for (auto & node : m_keyMapNodes) {
         switch (node.type) {
         case KMT_CLICK: {
             QMultiHash<int, KeyMapNode *> &m = node.data.click.keyNode.type == AT_KEY ? m_rmapKey : m_rmapMouse;
@@ -595,7 +610,19 @@ void KeyMap::makeReverseMap()
         case KMT_PRESS_RELEASE: {
             QMultiHash<int, KeyMapNode *> &m = node.data.pressRelease.keyNode.type == AT_KEY ? m_rmapKey : m_rmapMouse;
             m.insert(node.data.pressRelease.keyNode.key, &node);
+        }break;
+        case KMT_MOBA_WHEEL: {
+            QMultiHash<int, KeyMapNode *> &m = node.data.mobaWheel.keyNode.type == AT_KEY ? m_rmapKey : m_rmapMouse;
+            m.insert(node.data.mobaWheel.keyNode.key, &node);
         } break;
+        case KMT_MOBA_SKILL: {
+            QMultiHash<int, KeyMapNode *> &m = node.data.mobaSkill.keyNode.type == AT_KEY ? m_rmapKey : m_rmapMouse;
+            m.insert(node.data.mobaSkill.keyNode.key, &node);
+        }break;
+        case KMT_BURST_CLICK: {
+            QMultiHash<int, KeyMapNode *> &m = node.data.burstClick.keyNode.type == AT_KEY ? m_rmapKey : m_rmapMouse;
+            m.insert(node.data.burstClick.keyNode.key, &node);
+        }
         default:
             break;
         }
@@ -766,4 +793,76 @@ void KeyMap::setDualMode(KeyMapNode &node, const QString &dualMode, KeyNode &key
 bool KeyMap::checkForPressRelease(const QJsonObject &node)
 {
     return checkItemString(node, "key") && checkItemPos(node, "pressPos") && checkItemPos(node, "releasePos");
+}
+
+bool KeyMap::checkForMobaWheel(const QJsonObject &node) {
+    return checkItemString(node, "key")
+    && checkItemPos(node, "centerPos")
+    && checkItemDouble(node, "speedRatio")
+    && checkItemPos(node,"wheelPos")
+    && checkItemDouble(node,"skillOffset");
+}
+
+void KeyMap::setMobaWheelMapNode(KeyMapNode &keyMapNode, const QJsonObject &node, const KeyMapType &type) {
+    if (!checkForMobaWheel(node)) {
+        qWarning() << "json error: KMT_MOBA_WHEEL keyMapNodes node format error";
+        return;
+    }
+    QPair<ActionType, int> key = getItemKey(node, "key");
+    if (key.first == AT_INVALID) {
+        qWarning() << "json error: keyMapNodes node invalid key: " << node.value("key").toString();
+        return;
+    }
+    keyMapNode.type = type;
+    keyMapNode.data.mobaWheel.keyNode.type = key.first;
+    keyMapNode.data.mobaWheel.keyNode.key = key.second;
+    keyMapNode.data.mobaWheel.centerPos = getItemPos(node, "centerPos");
+    keyMapNode.data.mobaWheel.speedRatio = getItemDouble(node, "speedRatio");
+    keyMapNode.data.mobaWheel.wheelPos = getItemPos(node, "wheelPos");
+    keyMapNode.data.mobaWheel.skillOffset = getItemDouble(node, "skillOffset");
+    m_isValidMobaWheel = true;
+}
+
+void KeyMap::setMobaSkillMapNode(KeyMap::KeyMapNode &keyMapNode, const QJsonObject &node, KeyMap::KeyMapType type) {
+    if (!checkForMobaSkill(node)) {
+        qWarning() << "json error: KMT_MOBA_SKILL keyMapNodes node format error";
+        return;
+    }
+    QPair<ActionType, int> key = getItemKey(node, "key");
+    if (key.first == AT_INVALID) {
+        qWarning() << "json error: keyMapNodes node invalid key: " << node.value("key").toString();
+        return;
+    }
+    keyMapNode.type = type;
+    keyMapNode.data.mobaSkill.keyNode.type = key.first;
+    keyMapNode.data.mobaSkill.keyNode.key = key.second;
+    keyMapNode.data.mobaSkill.keyNode.pos = getItemPos(node, "pos");
+    keyMapNode.data.mobaSkill.speedRatio = getItemDouble(node, "speedRatio");
+    keyMapNode.data.mobaSkill.stopMove = getItemBool(node, "stopMove");
+    keyMapNode.data.mobaSkill.quickCast = getItemBool(node, "quickCast");
+}
+
+bool KeyMap::checkForMobaSkill(const QJsonObject &node) {
+    return checkItemString(node, "key") && checkItemPos(node, "pos") && checkItemDouble(node, "speedRatio");
+}
+
+void KeyMap::setBurstClickMapNode(KeyMap::KeyMapNode &keyMapNode, const QJsonObject &node, KeyMap::KeyMapType type) {
+    if (!checkForBurstClick(node)) {
+        qWarning() << "json error: KMT_BURST_CLICK keyMapNodes node format error";
+        return;
+    }
+    QPair<ActionType, int> key = getItemKey(node, "key");
+    if (key.first == AT_INVALID) {
+        qWarning() << "json error: keyMapNodes node invalid key: " << node.value("key").toString();
+        return;
+    }
+    keyMapNode.type = type;
+    keyMapNode.data.burstClick.keyNode.type = key.first;
+    keyMapNode.data.burstClick.keyNode.key = key.second;
+    keyMapNode.data.burstClick.keyNode.pos = getItemPos(node, "pos");
+    keyMapNode.data.burstClick.rate = getItemDouble(node, "rate");
+}
+
+bool KeyMap::checkForBurstClick(const QJsonObject &node) {
+    return checkItemString(node, "key") && checkItemPos(node, "pos")&& checkItemDouble(node, "rate");
 }
