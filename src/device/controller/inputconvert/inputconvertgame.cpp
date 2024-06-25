@@ -1102,8 +1102,8 @@ bool InputConvertGame::processMobaMouseMove(const QMouseEvent *from) {
     }
     m_ctrlSteerWheel.mobaWheel.localPos = from->localPos();
 
-    double speedRatio = m_ctrlSteerWheel.mobaWheel.skillRatio;
     if (m_ctrlSteerWheel.mobaWheel.skillPressed) {
+        double skillRatio = m_ctrlSteerWheel.mobaWheel.skillRatio;
         if (m_dragDelayData.timer->isActive()) {
             m_dragDelayData.timer->stop();
             m_dragDelayData.queueTimer.clear();
@@ -1112,7 +1112,7 @@ bool InputConvertGame::processMobaMouseMove(const QMouseEvent *from) {
 
         QPointF rawPos{from->localPos().x() / m_showSize.width(), from->localPos().y() / m_showSize.height()};
         QPointF rawDistance{rawPos - m_ctrlSteerWheel.mobaWheel.centerPos};
-        QPointF distance{rawDistance.x() / speedRatio * m_ctrlSteerWheel.mobaWheel.skillOffset, rawDistance.y() / speedRatio};
+        QPointF distance{rawDistance.x() / skillRatio * m_ctrlSteerWheel.mobaWheel.skillOffset, rawDistance.y() / skillRatio};
         QPointF endPos{m_dragDelayData.startPos + distance};
         qDebug() << "endPos" << endPos;
         sendTouchMoveEvent(getTouchID(m_dragDelayData.pressKey), endPos);
@@ -1120,6 +1120,7 @@ bool InputConvertGame::processMobaMouseMove(const QMouseEvent *from) {
         return true;
     }
     if (m_ctrlSteerWheel.mobaWheel.wheelPressed) {
+        double speedRatio = m_ctrlSteerWheel.mobaWheel.speedRatio;
         if (m_ctrlSteerWheel.delayData.timer->isActive()) {
             m_ctrlSteerWheel.delayData.timer->stop();
             m_ctrlSteerWheel.delayData.queueTimer.clear();
