@@ -121,7 +121,6 @@ void InputConvertGame::keyEvent(const QKeyEvent *from, const QSize &frameSize, c
     }
 
     const KeyMap::KeyMapNode &node = m_keyMap.getKeyMapNodeKey(from->key());
-    //    qDebug() <<"buttonType: "<< node.type;
 
     // 处理特殊按键：可以释放出鼠标的按键
     if (m_gameMap && node.switchMap) {
@@ -257,7 +256,6 @@ void InputConvertGame::sendTouchEvent(int id, QPointF pos, AndroidMotioneventAct
         //        Q_ASSERT(0);
         return;
     }
-    //qDebug() << "id:" << id << " pos:" << pos << " action" << action;
     ControlMsg *controlMsg = new ControlMsg(ControlMsg::CMT_INJECT_TOUCH);
     if (!controlMsg) {
         return;
@@ -480,7 +478,6 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
         m_ctrlSteerWheel.touchKey = from->key();
         int id = attachTouchID(m_ctrlSteerWheel.touchKey);
         const QPointF centerPos = shakePos(node.data.steerWheel.centerPos, 0.025, 0.025);
-        //        qDebug() << "steerWheel centerPos:" << centerPos;
         m_keyPosMap[Qt::Key_sterling] = centerPos;
         sendTouchDownEvent(id, centerPos);
         getDelayQueue(centerPos, centerPos + offset, 0.01f, 0.0005f, 1, 3, m_ctrlSteerWheel.delayData.queuePos, m_ctrlSteerWheel.delayData.queueTimer);
@@ -507,7 +504,6 @@ void InputConvertGame::processKeyClick(bool clickTwice, const KeyMap::KeyMapNode
         m_keyPosMap[from->key()] = processedPos;
         int id = attachTouchID(from->key());
         sendTouchDownEvent(id, processedPos);
-        //        qDebug() << "touch down shakePos:" << shakePos;
         if (clickTwice) {
             sendTouchUpEvent(getTouchID(from->key()), processedPos);
             detachTouchID(from->key());
@@ -517,7 +513,6 @@ void InputConvertGame::processKeyClick(bool clickTwice, const KeyMap::KeyMapNode
             int id = attachTouchID(from->key());
             sendTouchDownEvent(id, m_keyPosMap[from->key()]);
         }
-        //        qDebug() << "touch up shakePos:" << m_keyPosMap[from->key()];
         sendTouchUpEvent(getTouchID(from->key()), m_keyPosMap[from->key()]);
         detachTouchID(from->key());
     }
@@ -537,7 +532,6 @@ void InputConvertGame::switchMouse(const KeyMap::KeyMapNode &node, bool forceSwi
     if (forceSwitchOn && m_needBackMouseMove)
         return;
     //强制关闭鼠标
-    //    qDebug() << "forceSwitchOff:" << forceSwitchOff;
     if (forceSwitchOff && !m_needBackMouseMove)
         return;
     setMousePos(m_needBackMouseMove, node);
@@ -813,7 +807,6 @@ void InputConvertGame::moveCursorTo(const QMouseEvent *from, const QPoint &local
     QPoint posOffset = from->pos() - localPosPixel;
     QPoint globalPos = from->globalPos();
     globalPos -= posOffset;
-    //qDebug()<<"move cursor to "<<globalPos<<" offset "<<posOffset;
     QCursor::setPos(globalPos);
 }
 
@@ -843,7 +836,6 @@ QPointF InputConvertGame::shakePos(QPointF pos, double offsetX, double offsetY)
     qreal y = pos.y();
     qreal shakeX = QRandomGenerator::global()->bounded(offsetX * 2) - offsetX;
     qreal shakeY = QRandomGenerator::global()->bounded(offsetY * 2) - offsetY;
-    //    qDebug() << "shakeX:" << shakeX << " shakeY:" << shakeY;
     return { x + shakeX, y + shakeY };
 }
 
@@ -937,7 +929,6 @@ void InputConvertGame::setMousePos(bool b, const KeyMap::KeyMapNode &node)
             }
         } else {
             if (activeWindow->isFullScreen()) {
-                //                qDebug() << "fs setPos" << m_showSize;
                 QCursor::setPos(m_showSize.width() / 2, m_showSize.height() / 2);
             } else {
                 QPoint center = activeWindow->mapToGlobal(activeWindow->rect().center());
@@ -1025,7 +1016,6 @@ bool InputConvertGame::processMobaWheel(const QMouseEvent *from) {
     m_ctrlSteerWheel.touchKey = from->button();
     m_ctrlSteerWheel.mobaWheel.speedRatio = node.data.mobaWheel.speedRatio;
     m_ctrlSteerWheel.mobaWheel.centerPos = node.data.mobaWheel.centerPos;
-    qDebug() << "centerPos" << node.data.mobaWheel.centerPos;
     m_ctrlSteerWheel.mobaWheel.localPos = from->localPos();
     if (QEvent::MouseButtonPress == from->type() || QEvent::MouseButtonDblClick == from->type()) {
         QPointF wheelPos;
@@ -1052,7 +1042,6 @@ bool InputConvertGame::processMobaWheel(const QMouseEvent *from) {
         QPointF distance{rawDistance.x() / m_ctrlSteerWheel.mobaWheel.speedRatio, rawDistance.y() / m_ctrlSteerWheel.mobaWheel.speedRatio * m_showSizeRatio};
         QPointF endPos{wheelPos + distance};
 
-        //        qDebug() << "endPos" << pos;
         getDelayQueue(startPos, endPos, 0.01f, 0.0005f, 1, 5,
                       m_ctrlSteerWheel.delayData.queuePos,
                       m_ctrlSteerWheel.delayData.queueTimer);
@@ -1114,7 +1103,6 @@ bool InputConvertGame::processMobaMouseMove(const QMouseEvent *from) {
         QPointF rawDistance{rawPos - m_ctrlSteerWheel.mobaWheel.centerPos};
         QPointF distance{rawDistance.x() / skillRatio * m_ctrlSteerWheel.mobaWheel.skillOffset, rawDistance.y() / skillRatio};
         QPointF endPos{m_dragDelayData.startPos + distance};
-        qDebug() << "endPos" << endPos;
         sendTouchMoveEvent(getTouchID(m_dragDelayData.pressKey), endPos);
         m_dragDelayData.currentPos = endPos;
         return true;
@@ -1158,7 +1146,6 @@ void InputConvertGame::processMobaSkill(const KeyMap::KeyMapNode &node, const QK
         QPointF rawDistance{rawPos - m_ctrlSteerWheel.mobaWheel.centerPos};
         QPointF distance{rawDistance.x() / speedRatio * skillOffset, rawDistance.y() / speedRatio};
         QPointF endPos{clickPos + distance};
-        qDebug() << "press endPos" << endPos<<" skillOffset:"<<skillOffset<<" clickPos:"<<clickPos;
         m_dragDelayData.allowUp = false;
         m_dragDelayData.timer = new QTimer(this);
         m_dragDelayData.timer->setSingleShot(true);
@@ -1206,7 +1193,6 @@ void InputConvertGame::cycleClick(QPointF pos, int clickInterval, int key) {
         if (!m_burstClickKeySet.contains(key)) {
             return;
         }
-        qDebug() << "cycleClick nextClick:" << nextClick;
         QTimer::singleShot(nextClick, this, [this, key, pos,clickInterval]() {
             cycleClick(pos, clickInterval, key);
         });
