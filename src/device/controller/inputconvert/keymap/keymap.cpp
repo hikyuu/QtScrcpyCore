@@ -54,6 +54,10 @@ void KeyMap::loadKeyMap(const QString &json)
     m_switchKey.type = switchKey.first;
     m_switchKey.key = switchKey.second;
 
+    if (checkItemBool(rootObj, "customMouseClick")) {
+        m_customMouseClick = getItemBool(rootObj, "customMouseClick");
+    }
+
     // mouseMoveMap
     if (checkItemObject(rootObj, "mouseMoveMap")) {
         QJsonObject mouseMoveMap = getItemObject(rootObj, "mouseMoveMap");
@@ -379,6 +383,8 @@ void KeyMap::setSteerWheelMapNode(KeyMapNode &keyMapNode, const QJsonObject &nod
     keyMapNode.data.steerWheel.centerPos = getItemPos(node, "centerPos");
 
     setSteerWheelSwitchMode(node, keyMapNode);
+    setBoost(node, keyMapNode);
+
     m_idxSteerWheel = m_keyMapNodes.size();
 }
 void KeyMap::setClickMultiMapNode(KeyMapNode &keyMapNode, const QJsonObject &node, const KeyMapType &type, const QString &dualMode)
@@ -399,6 +405,9 @@ void KeyMap::setClickMultiMapNode(KeyMapNode &keyMapNode, const QJsonObject &nod
         qInfo() << "clickNodes too much, up to " << MAX_DELAY_CLICK_NODES;
         return;
     }
+    if (checkItemDouble(node, "pressTime")) {
+        keyMapNode.data.clickMulti.pressTime = getItemDouble(node,"pressTime");
+    }
     keyMapNode.type = type;
     keyMapNode.data.clickMulti.keyNode.type = key.first;
     keyMapNode.data.clickMulti.keyNode.key = key.second;
@@ -410,6 +419,9 @@ void KeyMap::setClickMultiMapNode(KeyMapNode &keyMapNode, const QJsonObject &nod
         DelayClickNode delayClickNode;
         delayClickNode.delay = getItemDouble(clickNode, "delay");
         delayClickNode.pos = getItemPos(clickNode, "pos");
+        if (checkItemDouble(clickNode, "pressTime")) {
+            delayClickNode.pressTime = getItemDouble(clickNode, "pressTime");
+        }
         keyMapNode.data.clickMulti.keyNode.delayClickNodes[_i] = delayClickNode;
         keyMapNode.data.clickMulti.keyNode.delayClickNodesCount++;
     }
@@ -481,6 +493,39 @@ void KeyMap::setCommonProperties(const QJsonObject &node, KeyMap::KeyMapNode &ke
         keyMapNode.focusOn = getItemBool(node, "focusOn");
     }
 }
+
+void KeyMap::setBoost(const QJsonObject &node, KeyMap::KeyMapNode &keyMapNode){
+    if (checkItemObject(node, "boost")) {
+        QJsonObject boost = node.value("boost").toObject();
+        if (!boost.contains("type") || !boost.value("type").isString()) {
+            qWarning() << "json error: boost no find node type";
+            return;
+        }
+        KeyMap::KeyMapType type = getItemKeyMapType(boost, "type");
+        if (KeyMap::KMT_CLICK != type) {
+            qWarning() << "json error: boost just support KMT_CLICK";
+            return;
+        }
+        if (! checkItemString(boost, "key")) {
+            qWarning() << "json error: boost node key format error";
+            return;
+        }
+        QPair<ActionType, int> key = getItemKey(boost, "key");
+        if (key.first == AT_INVALID) {
+            qWarning() << QString("json error: boost node invalid key: %1").arg(boost.value("key").toString());
+            return;
+        }
+        if (! checkItemDouble(boost, "extendOffset")) {
+            qWarning() << "json error: boost node extendOffset format error";
+            return;
+        }
+        keyMapNode.data.steerWheel.boost.type = key.first;
+        keyMapNode.data.steerWheel.boost.key = key.second;
+        keyMapNode.data.steerWheel.boost.extendOffset =  getItemDouble(boost,"extendOffset");
+    }
+}
+
+
 void KeyMap::setSteerWheelSwitchMode(const QJsonObject &node, KeyMap::KeyMapNode &keyMapNode)
 {
     if (!checkItemString(node, "switchKey"))
@@ -590,6 +635,8 @@ void KeyMap::makeReverseMap()
             md.insert(node.data.steerWheel.down.key, &node);
             QMultiHash<int, KeyMapNode *> &mc = node.data.steerWheel.switchKey.type == AT_KEY ? m_rmapKey : m_rmapMouse;
             mc.insert(node.data.steerWheel.switchKey.key, &node);
+            QMultiHash<int, KeyMapNode *> &mb = node.data.steerWheel.boost.type == AT_KEY ? m_rmapKey : m_rmapMouse;
+            mb.insert(node.data.steerWheel.boost.key, &node);
         } break;
         case KMT_DRAG: {
             QMultiHash<int, KeyMapNode *> &m = node.data.drag.keyNode.type == AT_KEY ? m_rmapKey : m_rmapMouse;
@@ -865,4 +912,8 @@ void KeyMap::setBurstClickMapNode(KeyMap::KeyMapNode &keyMapNode, const QJsonObj
 
 bool KeyMap::checkForBurstClick(const QJsonObject &node) {
     return checkItemString(node, "key") && checkItemPos(node, "pos")&& checkItemDouble(node, "rate");
+}
+
+bool KeyMap::getCustomMouseClick() const {
+    return m_customMouseClick;
 }

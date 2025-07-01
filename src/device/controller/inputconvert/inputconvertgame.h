@@ -50,7 +50,7 @@ protected:
 
     void detachTouchID(int key);
 
-    int getTouchID(int key);
+    int getTouchID(int key) const;
 
     // steer wheel
     void processSteerWheel(const KeyMap::KeyMapNode &node, const QKeyEvent *from);
@@ -59,7 +59,8 @@ protected:
     void processKeyClick(bool clickTwice, const KeyMap::KeyMapNode &node, const QKeyEvent *from);
 
     // click mutil
-    void processKeyClickMulti(const KeyMap::DelayClickNode *nodes, const int count, const QKeyEvent *from);
+    void processKeyClickMulti(const KeyMap::DelayClickNode *nodes, const int count, const double pressTime,
+                              const QKeyEvent *from);
 
     // drag
     void processKeyDrag(const QPointF &startPos, QPointF endPos, const QKeyEvent *from);
@@ -69,6 +70,8 @@ protected:
 
     // mouse
     bool processMouseClick(const QMouseEvent *from);
+
+    bool processCustomMouseClick(const QMouseEvent *from, const QSize &frameSize, const QSize &showSize);
 
     bool processMouseMove(const QMouseEvent *from);
 
@@ -116,6 +119,7 @@ private:
     QSize m_showSize;
     double m_showSizeRatio;
     bool m_gameMap = false;
+    bool m_customNormalMouseClick = false;
     //准心模式鼠标移动镜头
     bool m_needBackMouseMove = false;
     int m_multiTouchID[MULTI_TOUCH_MAX_NUM] = {0};
@@ -132,6 +136,7 @@ private:
         bool pressedDown = false;
         bool pressedLeft = false;
         bool pressedRight = false;
+        bool pressedBoost = false;
         bool clickMode = false;
         QPointF clickPos;
         // for delay
@@ -150,6 +155,8 @@ private:
             QPointF wheelPos;
             bool wheelPressed = false;
             bool skillPressed = false;
+            bool quickCast = false;
+            QTimer *stopTimer = nullptr;
             QPointF localPos;
             double skillOffset;
         } mobaWheel;
@@ -201,7 +208,9 @@ private:
 
     void cycleClick(QPointF pos, int clickInterval, int i1);
 
-    void stopMobaWheel(double delay);
+    void stopMobaWheel(double delay) const;
+
+    void onStopMobaWheelTimer();
 };
 
 #endif // INPUTCONVERTGAME_H
