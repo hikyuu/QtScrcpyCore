@@ -49,6 +49,7 @@ public:
     {
         int delay = 0;
         QPointF pos = QPointF(0, 0);
+        int pressTime = 0;
     };
 
     struct SecondNode
@@ -104,11 +105,13 @@ public:
             struct
             {
                 KeyNode keyNode;
+                double pressTime = 0;
             } clickMulti;
             struct
             {
                 QPointF centerPos = { 0.0, 0.0 };
                 KeyNode left, right, up, down, switchKey;
+                KeyNode boost;
             } steerWheel;
             struct
             {
@@ -182,6 +185,7 @@ public:
     bool isValidMobaWheel();
 
     const KeyMap::KeyMapNode &getMouseMoveMap();
+    bool getCustomMouseClick() const;
 
 private:
     // set up the reverse map from key/event event to keyMapNode
@@ -223,7 +227,7 @@ private:
 
     QVector<KeyMapNode> m_keyMapNodes;
     KeyNode m_switchKey = { AT_KEY, Qt::Key_QuoteLeft };
-
+    bool m_customMouseClick = false;
     // just for return
     KeyMapNode m_invalidNode;
 
@@ -269,6 +273,10 @@ private:
     void setBurstClickMapNode(KeyMap::KeyMapNode &keyMapNode, const QJsonObject &node, KeyMap::KeyMapType type);
 
     bool checkForBurstClick(const QJsonObject &node);
+
+    void setBoost(const QJsonObject &node, KeyMapNode &keyMapNode);
+
+
 };
 
 #endif // KEYMAP_H
