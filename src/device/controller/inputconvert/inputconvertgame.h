@@ -77,7 +77,7 @@ protected:
 
     void moveCursorTo(const QMouseEvent *from, const QPoint &localPosPixel);
 
-    void mouseMoveStartTouch(const QMouseEvent *from, const QPointF pos);
+    void mouseMoveStartTouch(const QPointF pos);
 
     void mouseMoveStopTouch();
 
@@ -166,6 +166,7 @@ private:
     {
         QPointF lastConvertPos;
         QPointF lastPos = { 0.0, 0.0 };
+        int focusTouchID = -1;
         bool touching = false;
         int timer = 0;
         bool needResetTouch = true;
@@ -211,6 +212,12 @@ private:
     void stopMobaWheel(double delay) const;
 
     void onStopMobaWheelTimer();
+
+    void detachIndexID(int i);
+
+    int getTouchIDNumber(int key) const;
+
+    void resetMouseMove(const QPointF pos);
 };
 
 #endif // INPUTCONVERTGAME_H
