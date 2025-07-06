@@ -75,7 +75,7 @@ protected:
 
     bool processMouseMove(const QMouseEvent *from);
 
-    void moveCursorTo(const QMouseEvent *from, const QPoint &localPosPixel);
+    static void moveCursorTo(const QMouseEvent *from, const QPoint &localPosPixel);
 
     void mouseMoveStartTouch(const QPointF pos);
 
@@ -114,6 +114,10 @@ private slots:
 
     void onDragTimer();
 
+    void onWheelScrollTimer();
+
+    void onWheelUpTimer();
+
 private:
     QSize m_frameSize;
     QSize m_showSize;
@@ -131,7 +135,7 @@ private:
     // steer wheel
     struct {
         // the first key wheelPressed
-        int touchKey = Qt::Key_unknown;
+        int touchKey = Qt::Key_sterling;
         bool pressedUp = false;
         bool pressedDown = false;
         bool pressedLeft = false;
@@ -166,6 +170,7 @@ private:
     {
         QPointF lastConvertPos;
         QPointF lastPos = { 0.0, 0.0 };
+        QPoint centerPos = { 0, 0 };
         int focusTouchID = -1;
         bool touching = false;
         int timer = 0;
@@ -179,13 +184,26 @@ private:
         QPointF startPos;
         QPointF currentPos;
         QTimer *timer = nullptr;
+        QTimer *upTimer = nullptr;
+        QQueue<QPointF> queuePos;
+        QQueue<quint32> queueTimer;
+        int pressKey = 0;
+        bool allowUp = true;
+    } m_dragDelayData;
+
+    struct
+    {
+        QPointF startPos;
+        QPointF currentPos;
+        QPointF endPos;
+        QTimer *timer = nullptr;
+        QTimer *upTimer = nullptr;
         QQueue<QPointF> queuePos;
         QQueue<quint32> queueTimer;
         int pressKey = 0;
         bool wheeling = false;
-        int wheelDelayUpTime = 0;
-        bool allowUp = true;
-    } m_dragDelayData;
+        int wheelDelayUpTime = 200;
+    } m_wheelDelayData;
     void processRotaryTable(const KeyMap::KeyMapNode &node, const QKeyEvent *constpos);
     void switchMouse(const KeyMap::KeyMapNode &node, const QKeyEvent *from);
     void processDualMode(KeyMap::KeyMapNode &node, const QKeyEvent *from);
@@ -218,6 +236,7 @@ private:
     int getTouchIDNumber(int key) const;
 
     void resetMouseMove(const QPointF pos);
+
 };
 
 #endif // INPUTCONVERTGAME_H
