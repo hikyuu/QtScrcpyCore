@@ -162,11 +162,9 @@ void InputConvertGame::keyEvent(const QKeyEvent *from, const QSize &frameSize, c
         if (m_keyMap.isValidMouseMoveMap() && from->key() == m_keyMap.getMouseMoveMap().data.mouseMove.smallEyes.key) {
             m_ctrlMouseMove.smallEyes = (QEvent::KeyPress == from->type());
             if (QEvent::KeyPress == from->type()) {
-                m_processMouseMove = false;
                 m_currentSpeedRatio = QPointF(5, 2.5);
                 stopMouseMoveTimer();
                 resetMouseMove(*new QPointF);
-                m_processMouseMove = true;
             } else {
                 m_currentSpeedRatio = m_keyMap.getMouseMoveMap().data.mouseMove.speedRatio;
                 resetMouseMove(*new QPointF);
@@ -464,6 +462,7 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
     int key = from->key();
     // 是否按下
     bool keyPress = from->type() == QEvent::KeyPress;
+    bool boostKey = key == node.data.steerWheel.boost.key;
     if (keyPress && key == node.data.steerWheel.switchKey.key) {
         m_ctrlSteerWheel.clickMode = !m_ctrlSteerWheel.clickMode;
         return;
@@ -481,8 +480,6 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
     } else if (key == node.data.steerWheel.left.key){ // left
         m_ctrlSteerWheel.pressedLeft = keyPress;
         m_ctrlSteerWheel.clickPos = node.data.steerWheel.left.pos;
-    } else if (!keyPress) {
-        return;
     }
     if (m_ctrlSteerWheel.clickMode) {
         if (QEvent::KeyPress == from->type()) {
@@ -520,11 +517,15 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
     }
     m_ctrlSteerWheel.delayData.pressedNum = pressedNum;
 
-    bool boost = false;
-    if (key == node.data.steerWheel.boost.key ) {
-        if (pressedNum == 0) return;
-        boost = true;
+    if (boostKey) {
+        if (pressedNum==0) return;
+        if(!keyPress) return;
+//            qDebug() << "shift click";
         m_ctrlSteerWheel.pressedBoost = !m_ctrlSteerWheel.pressedBoost;
+    } else if (pressedNum == 1 && keyPress) {
+        if (from->modifiers() & Qt::ShiftModifier) {
+            m_ctrlSteerWheel.pressedBoost = true;
+        }
     }
     if (m_ctrlSteerWheel.pressedBoost) {
         if (m_ctrlSteerWheel.pressedUp) {
@@ -552,7 +553,7 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
         if (m_ctrlSteerWheel.pressedBoost) {
             int id = attachTouchID(Qt::Key_Stop);
             const QPointF centerPos = shakePos(node.data.steerWheel.centerPos, 0.025, 0.025);
-            qreal shakePressDelay= QRandomGenerator::global()->bounded(50,100);
+            qreal shakePressDelay= QRandomGenerator::global()->bounded(30,40);
             QTimer::singleShot(shakePressDelay, this, [this, id, centerPos]() {
                 sendTouchDownEvent(id, centerPos);
             });
@@ -573,20 +574,20 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
     m_ctrlSteerWheel.delayData.queuePos.clear();
 
     // first press, get key and touch down
-    if (pressedNum == 1 && keyPress && !boost) {
+    if (pressedNum == 1 && keyPress && !boostKey) {
 //        qDebug() << "first press";
         int id = attachTouchID(m_ctrlSteerWheel.touchKey);
         const QPointF centerPos = shakePos(node.data.steerWheel.centerPos, 0.025, 0.025);
         m_keyPosMap[Qt::Key_sterling] = centerPos;
         sendTouchDownEvent(id, centerPos);
-        getDelayQueue(centerPos, centerPos + offset, 0.01f, 0.0005f, 1, 3, m_ctrlSteerWheel.delayData.queuePos, m_ctrlSteerWheel.delayData.queueTimer);
+        getDelayQueue(centerPos, centerPos + offset, 0.01f, 0.005f, 1, 3, m_ctrlSteerWheel.delayData.queuePos, m_ctrlSteerWheel.delayData.queueTimer);
     } else {
 //        qDebug() << "change press";
         getDelayQueue(
             m_ctrlSteerWheel.delayData.currentPos,
             m_keyPosMap[Qt::Key_sterling] + offset,
             0.01f,
-            0.0005f,
+            0.005f,
             1,
             3,
             m_ctrlSteerWheel.delayData.queuePos,
@@ -984,63 +985,67 @@ bool InputConvertGame::processMouseMove(const QMouseEvent *from)
         return false;
     }
 
-    if (m_processMouseMove) {
-
         QPointF distance_raw{ from->localPos() - m_ctrlMouseMove.centerPos };
         QPointF speedRatio = m_currentSpeedRatio;
         QPointF distance{ distance_raw.x() / speedRatio.x(), distance_raw.y() / speedRatio.y() };
         QPointF currentConvertPos(m_ctrlMouseMove.lastConvertPos.x() + distance.x() / m_showSize.width(),
                                   m_ctrlMouseMove.lastConvertPos.y() + distance.y() / m_showSize.height());
-        m_ctrlMouseMove.lastConvertPos.setX(m_ctrlMouseMove.lastConvertPos.x() + distance.x() / m_showSize.width());
-        m_ctrlMouseMove.lastConvertPos.setY(m_ctrlMouseMove.lastConvertPos.y() + distance.y() / m_showSize.height());
         moveCursorTo(from, m_ctrlMouseMove.centerPos);
-        mouseMoveStartTouch(*new QPointF);
         startMouseMoveTimer();
+
+        if (mouseMoveStartTouch(*new QPointF)){
+            return true;
+        }
         if (!m_ctrlMouseMove.needResetTouch) {
             bool boundary = false;
-            if (m_ctrlMouseMove.lastConvertPos.x() <= 0) {
-                m_ctrlMouseMove.lastConvertPos.setX(0);
+            if (currentConvertPos.x() <= 0) {
+                currentConvertPos.setX(0);
                 boundary = true;
-            } else if (m_ctrlMouseMove.lastConvertPos.x()>= 1) {
-                m_ctrlMouseMove.lastConvertPos.setX(1);
+            } else if (currentConvertPos.x()>= 1) {
+                currentConvertPos.setX(1);
                 boundary = true;
             }
-            if (m_ctrlMouseMove.lastConvertPos.y() <= 0) {
-                m_ctrlMouseMove.lastConvertPos.setY(0);
+            if (currentConvertPos.y() <= 0) {
+                currentConvertPos.setY(0);
                 boundary = true;
-            }else if (m_ctrlMouseMove.lastConvertPos.y() >= 1) {
-                m_ctrlMouseMove.lastConvertPos.setY(1);
+            }else if (currentConvertPos.y() >= 1) {
+                currentConvertPos.setY(1);
                 boundary = true;
             }
             if (boundary) return true;
-        }else if (m_ctrlMouseMove.lastConvertPos.x() < 0.4 || m_ctrlMouseMove.lastConvertPos.x() > 0.9 || m_ctrlMouseMove.lastConvertPos.y() < 0.4
-            || m_ctrlMouseMove.lastConvertPos.y() > 0.9) {
+        }else if (currentConvertPos.x() < 0.3 || currentConvertPos.x() > 0.9 || currentConvertPos.y() < 0.2
+            || currentConvertPos.y() > 0.9) {
+            if (!m_ctrlMouseMove.mouseMutex.try_lock()) return true;
+            qDebug() << "over the boundary";
             if (m_ctrlMouseMove.smallEyes) {
-                m_processMouseMove = false;
                 m_ctrlMouseMove.needResetTouch = false;
                 resetMouseMove(*new QPointF);
-                m_processMouseMove = true;
             } else {
                 resetMouseMove(*new QPointF);
-                m_ctrlMouseMove.needResetTouch = true;
             }
+            m_ctrlMouseMove.mouseMutex.unlock();
             return true;
         }
         if (m_ctrlMouseMove.touching) {
-            sendTouchMoveEvent(m_ctrlMouseMove.focusTouchID, m_ctrlMouseMove.lastConvertPos);
+            if (!m_ctrlMouseMove.mouseMutex.try_lock()) {
+                qDebug() << "abandon multi thread:move";
+                return true;
+            }
+            m_ctrlMouseMove.lastConvertPos = currentConvertPos;
+            sendTouchMoveEvent(m_ctrlMouseMove.focusTouchID, currentConvertPos);
+            m_ctrlMouseMove.mouseMutex.unlock();
         }
-    }
     return true;
 }
 
 void InputConvertGame::resetMouseMove(const QPointF pos) {
     int id = getTouchID(Qt::ExtraButton24);
     if (m_ctrlMouseMove.touching) {
+        detachIndexID(id);
         sendTouchUpEvent(id, m_ctrlMouseMove.lastConvertPos);
         m_ctrlMouseMove.touching = false;
     }
     mouseMoveStartTouch(pos);
-    detachIndexID(id);
 }
 
 bool InputConvertGame::checkCursorPos(const QMouseEvent *from)
@@ -1077,9 +1082,14 @@ void InputConvertGame::moveCursorTo(const QMouseEvent *from, const QPoint &local
     QCursor::setPos(globalPos);
 }
 
-void InputConvertGame::mouseMoveStartTouch(const QPointF pos)
+bool InputConvertGame::mouseMoveStartTouch(const QPointF pos)
 {
     if (!m_ctrlMouseMove.touching) {
+        if (!m_ctrlMouseMove.mouseMutex.try_lock()) {
+            qDebug() << "abandon multi thread:touch down";
+            return true;
+        }
+        qDebug() << "mouse touch down";
         m_ctrlMouseMove.touching = true;
         QPointF mouseMoveStartPos;
         if (pos.isNull()) {
@@ -1092,10 +1102,13 @@ void InputConvertGame::mouseMoveStartTouch(const QPointF pos)
             mouseMoveStartPos = pos;
         }
         int id = attachTouchID(Qt::ExtraButton24);
+        m_ctrlMouseMove.lastConvertPos = mouseMoveStartPos;
         sendTouchDownEvent(id, mouseMoveStartPos);
         m_ctrlMouseMove.focusTouchID = id;
-        m_ctrlMouseMove.lastConvertPos = mouseMoveStartPos;
+        m_ctrlMouseMove.mouseMutex.unlock();
+        return true;
     }
+    return false;
 }
 QPointF InputConvertGame::shakePos(QPointF pos, double offsetX, double offsetY)
 {
@@ -1208,6 +1221,7 @@ void InputConvertGame::setMousePos(bool b, const KeyMap::KeyMapNode &node)
 void InputConvertGame::timerEvent(QTimerEvent *event)
 {
     if (m_ctrlMouseMove.timer == event->timerId()) {
+        qDebug() << "timer up";
         stopMouseMoveTimer();
         mouseMoveStopTouch();
     }
@@ -1218,13 +1232,11 @@ void InputConvertGame::processRotaryTable(const KeyMap::KeyMapNode &node, const 
     QPointF speedRatio = node.data.rotaryTable.speedRatio;
     if (m_keyMap.isValidMouseMoveMap()) {
         if (QEvent::KeyPress == from->type()) {
-            m_processMouseMove = false;
             m_ctrlMouseMove.needResetTouch = false;
             m_currentSpeedRatio = speedRatio;
             stopMouseMoveTimer();
             mouseMoveStopTouch();
             mouseMoveStartTouch(pos);
-            m_processMouseMove = true;
         } else {
             m_currentSpeedRatio = m_keyMap.getMouseMoveMap().data.mouseMove.speedRatio;
             m_ctrlMouseMove.needResetTouch = true;
