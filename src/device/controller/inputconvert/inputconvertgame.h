@@ -6,6 +6,7 @@
 #include <QQueue>
 #include <QScreen>
 #include <QWidget>
+#include <QMutex>
 
 #include "inputconvertnormal.h"
 #include "keymap.h"
@@ -77,7 +78,7 @@ protected:
 
     static void moveCursorTo(const QMouseEvent *from, const QPoint &localPosPixel);
 
-    void mouseMoveStartTouch(const QPointF pos);
+    bool mouseMoveStartTouch(const QPointF pos);
 
     void mouseMoveStopTouch();
 
@@ -176,6 +177,7 @@ private:
         int timer = 0;
         bool needResetTouch = true;
         bool smallEyes = false;
+        QMutex mouseMutex;
     } m_ctrlMouseMove;
 
     // for drag delay
