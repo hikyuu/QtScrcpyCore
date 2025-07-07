@@ -31,8 +31,8 @@ InputConvertGame::~InputConvertGame() {}
 
 void InputConvertGame::mouseEvent(const QMouseEvent *from, const QSize &frameSize, const QSize &showSize)
 {
+    updateSize(frameSize, showSize);
     if (m_gameMap) {
-        updateSize(frameSize, showSize);
         // mouse move
         if (!m_needBackMouseMove && m_keyMap.isValidMouseMoveMap()) {
             if (processMouseMove(from)) {
@@ -449,6 +449,7 @@ void InputConvertGame::onWheelTimer(int key) {
     if (m_ctrlSteerWheel.delayData.queuePos.empty() && m_ctrlSteerWheel.delayData.pressedNum == 0) {
         sendTouchUpEvent(id, m_ctrlSteerWheel.delayData.currentPos);
         detachIndexID(id);
+        m_ctrlSteerWheel.wheeling = false;
         return;
     }
 
@@ -549,6 +550,7 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
         int touchKeyID = getTouchID(m_ctrlSteerWheel.touchKey);
         sendTouchUpEvent(touchKeyID, m_ctrlSteerWheel.delayData.currentPos);
         detachIndexID(touchKeyID);
+        m_ctrlSteerWheel.wheeling = false;
         //取消持续奔跑
         if (m_ctrlSteerWheel.pressedBoost) {
             int id = attachTouchID(Qt::Key_Stop);
@@ -576,6 +578,12 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
     // first press, get key and touch down
     if (pressedNum == 1 && keyPress && !boostKey) {
 //        qDebug() << "first press";
+        QMutexLocker locker(&m_ctrlSteerWheel.steerMutex);
+        if (m_ctrlSteerWheel.wheeling) {
+            qDebug() << "steerWheel click concurrent";
+            return;
+        }
+        m_ctrlSteerWheel.wheeling = true;
         int id = attachTouchID(m_ctrlSteerWheel.touchKey);
         const QPointF centerPos = shakePos(node.data.steerWheel.centerPos, 0.025, 0.025);
         m_keyPosMap[Qt::Key_sterling] = centerPos;
@@ -601,6 +609,19 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
 void InputConvertGame::processKeyClick(bool clickTwice, const KeyMap::KeyMapNode &node, const QKeyEvent *from)
 {
     if (QEvent::KeyPress == from->type()) {
+
+        if (from->key() == Qt::Key_F2) {
+            QList<int> stuckArray;
+            int stuckNumber = 0;
+            for (int i = 0; i < MULTI_TOUCH_MAX_NUM; i++) {
+                if (0 != m_multiTouchID[i]) {
+                    stuckNumber++;
+                    stuckArray.append(m_multiTouchID[i]);
+                }
+            }
+            qDebug()<<"stuckNumber:"<<stuckNumber <<"exceptionButton:"<< stuckArray;
+        }
+
         QPointF processedPos = shakePos(node.data.click.keyNode.pos, 0.01, 0.01);
         m_keyPosMap[from->key()] = processedPos;
         int id = attachTouchID(from->key());
