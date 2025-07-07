@@ -132,7 +132,6 @@ private:
     QMap<int, QPointF> m_keyPosMap;
     QSet<int> m_burstClickKeySet;
     QPointF m_currentSpeedRatio;
-    bool m_processMouseMove = true;
     // steer wheel
     struct {
         // the first key wheelPressed
@@ -143,6 +142,8 @@ private:
         bool pressedRight = false;
         bool pressedBoost = false;
         bool clickMode = false;
+        bool wheeling = false;
+        QMutex steerMutex;
         QPointF clickPos;
         // for delay
         struct {
