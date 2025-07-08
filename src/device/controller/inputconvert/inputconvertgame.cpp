@@ -14,6 +14,7 @@
 #include <Windows.h>
 #include <xlocale>
 #include <QApplicationStateChangeEvent>
+#include <QtMath>
 
 #define CURSOR_POS_CHECK 100
 
@@ -474,6 +475,7 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
     if (key == node.data.steerWheel.up.key) {
         m_ctrlSteerWheel.pressedUp = keyPress;
         m_ctrlSteerWheel.clickPos = node.data.steerWheel.up.pos;
+
     } else if (key == node.data.steerWheel.right.key) {
         m_ctrlSteerWheel.pressedRight = keyPress;
         m_ctrlSteerWheel.clickPos = node.data.steerWheel.right.pos;
@@ -497,49 +499,60 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
         return;
     }
     // calc offset and wheelPressed number
-    QPointF offset(0.0, 0.0);
     int pressedNum = 0;
     double range = 0.01;
+    QPointF direction(0, 0);
     qreal shakeNumber = QRandomGenerator::global()->bounded(range * 2) - range;
 
     if (m_ctrlSteerWheel.pressedUp) {
         ++pressedNum;
-        offset.ry() -= (node.data.steerWheel.up.extendOffset + shakeNumber);
+        direction.ry() -= 1;
     }
     if (m_ctrlSteerWheel.pressedRight) {
         ++pressedNum;
-        offset.rx() += (node.data.steerWheel.right.extendOffset + shakeNumber);
+        direction.rx() += 1;
     }
     if (m_ctrlSteerWheel.pressedDown) {
         ++pressedNum;
-        offset.ry() += (node.data.steerWheel.down.extendOffset + shakeNumber);
+        direction.ry() += 1;
     }
     if (m_ctrlSteerWheel.pressedLeft) {
         ++pressedNum;
-        offset.rx() -= (node.data.steerWheel.left.extendOffset + shakeNumber);
+        direction.rx() -= 1;
     }
     m_ctrlSteerWheel.delayData.pressedNum = pressedNum;
-
+//    qDebug() << "wheel direction:" << direction;
     if (boostKey) {
         if (pressedNum==0) return;
         if(!keyPress) return;
 //            qDebug() << "shift click";
         m_ctrlSteerWheel.pressedBoost = !m_ctrlSteerWheel.pressedBoost;
     } else if (pressedNum == 1 && keyPress) {
+        qDebug() << "wheel first press";
+        m_keyPosMap[Qt::Key_sterling] = shakePos(node.data.steerWheel.centerPos, 0.01, 0.01);
         if (from->modifiers() & Qt::ShiftModifier) {
             m_ctrlSteerWheel.pressedBoost = true;
         }
     }
+    double radius = 0.15 + QRandomGenerator::global()->bounded(0.002 * 2) - 0.002;// 圆半径
+    if (pressedNum > 1) radius -= 0.05;
+
     if (m_ctrlSteerWheel.pressedBoost) {
-        if (m_ctrlSteerWheel.pressedUp) {
-            offset.ry() -= node.data.steerWheel.boost.extendOffset;
-        }
-        if (m_ctrlSteerWheel.pressedRight) {
-            offset.rx() += node.data.steerWheel.boost.extendOffset;
-        }
-        if (m_ctrlSteerWheel.pressedLeft) {
-            offset.rx() -= node.data.steerWheel.boost.extendOffset;
-        }
+        radius += node.data.steerWheel.boost.extendOffset;
+    }
+    QPointF centerPos = m_keyPosMap[Qt::Key_sterling];
+    QPointF endPos(centerPos);
+    if (!direction.isNull()) {
+        direction /= std::hypot(direction.x(), direction.y()); // 单位化向量
+
+        // 计算角度（弧度制）
+        double angleRad = qDegreesToRadians(QLineF(QPointF(0, 0), direction).angle());
+//        qDebug() << "wheel angleRad:" << angleRad;
+        // 计算圆周点坐标
+        endPos.setX(centerPos.x() + radius * std::cos(angleRad));
+        endPos.setY(centerPos.y() - radius * std::sin(angleRad));// Qt 坐标系 Y 轴向下，故取负
+//        qDebug() << "wheel endPos:" << endPos;
+
     }
 
     // last key release and timer no active, active timer to detouch
@@ -556,7 +569,6 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
         //取消持续奔跑
         if (m_ctrlSteerWheel.pressedBoost) {
             int id = attachTouchID(Qt::Key_Stop);
-            const QPointF centerPos = shakePos(node.data.steerWheel.centerPos, 0.025, 0.025);
             qreal shakePressDelay= QRandomGenerator::global()->bounded(30,40);
             QTimer::singleShot(shakePressDelay, this, [this, id, centerPos]() {
                 sendTouchDownEvent(id, centerPos);
@@ -587,25 +599,29 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
         }
         m_ctrlSteerWheel.wheeling = true;
         int id = attachTouchID(m_ctrlSteerWheel.touchKey);
-        const QPointF centerPos = shakePos(node.data.steerWheel.centerPos, 0.025, 0.025);
-        m_keyPosMap[Qt::Key_sterling] = centerPos;
         sendTouchDownEvent(id, centerPos);
-        getDelayQueue(centerPos, centerPos + offset, 0.01f, 0.005f, 1, 3, m_ctrlSteerWheel.delayData.queuePos, m_ctrlSteerWheel.delayData.queueTimer);
+        getDelayQueue(centerPos,
+                      endPos,
+                      0.015f,
+                      0.002f,
+                      3,
+                      5,
+                      m_ctrlSteerWheel.delayData.queuePos,
+                      m_ctrlSteerWheel.delayData.queueTimer);
     } else {
 //        qDebug() << "change press";
         getDelayQueue(
             m_ctrlSteerWheel.delayData.currentPos,
-            m_keyPosMap[Qt::Key_sterling] + offset,
-            0.01f,
-            0.005f,
-            1,
+            endPos,
+            0.015f,
+            0.002f,
             3,
+            5,
             m_ctrlSteerWheel.delayData.queuePos,
             m_ctrlSteerWheel.delayData.queueTimer);
     }
     m_ctrlSteerWheel.delayData.timer->start();
 }
-
 // -------- key event --------
 
 void InputConvertGame::processKeyClick(bool clickTwice, const KeyMap::KeyMapNode &node, const QKeyEvent *from)
@@ -623,7 +639,6 @@ void InputConvertGame::processKeyClick(bool clickTwice, const KeyMap::KeyMapNode
             }
             qDebug()<<"stuckNumber:"<<stuckNumber <<"exceptionButton:"<< stuckArray;
         }
-
 
         QPointF processedPos = shakePos(node.data.click.keyNode.pos, 0.005, 0.005);
         if (from->key() == Qt::Key_F) {
@@ -1155,6 +1170,7 @@ bool InputConvertGame::mouseMoveStartTouch(const QPointF pos)
     }
     return false;
 }
+
 QPointF InputConvertGame::shakePos(QPointF pos, double offsetX, double offsetY)
 {
     qreal x = pos.x();
