@@ -96,7 +96,7 @@ protected:
             const QPointF &start,
             const QPointF &end,
             const double &distanceStep,
-            const double &posStepconst,
+            const double &randomRange,
             quint32 lowestTimer,
             quint32 highestTimer,
             QQueue<QPointF> &queuePos,
@@ -192,8 +192,8 @@ private:
         QQueue<quint32> queueTimer;
         int pressKey = 0;
         bool allowUp = true;
+        int dragDelayUpTime = 0;
     } m_dragDelayData;
-
     struct
     {
         QPointF startPos;
@@ -240,6 +240,7 @@ private:
 
     void resetMouseMove(const QPointF pos);
 
+    double getRandomDouble(double min, double max);
 };
 
 #endif // INPUTCONVERTGAME_H
