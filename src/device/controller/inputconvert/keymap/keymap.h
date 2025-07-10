@@ -62,6 +62,7 @@ public:
     {
         ActionType type = AT_INVALID;
         int key = Qt::Key_unknown;
+        int modifier = Qt::Key_unknown;
         QPointF pos = QPointF(0, 0);                           // normal key
         QPointF extendPos = QPointF(0, 0);                     // for drag
         double extendOffset = 0.0;                             // for steerWheel
@@ -174,7 +175,7 @@ public:
 
     void loadKeyMap(const QString &json);
     const KeyMap::KeyMapNode &getKeyMapNode(int key);
-    const KeyMap::KeyMapNode &getKeyMapNodeKey(int key);
+    KeyMapNode getKeyMapNodeKey(int key);
     const KeyMap::KeyMapNode &getKeyMapNodeMouse(int key);
     bool isSwitchOnKeyboard();
     int getSwitchKey();
@@ -277,6 +278,7 @@ private:
     void setBoost(const QJsonObject &node, KeyMapNode &keyMapNode);
 
 
+    void setModifierKey(const QJsonObject &node, KeyMapNode &keyMapNode, QPair<ActionType, int> key);
 };
 
 #endif // KEYMAP_H
