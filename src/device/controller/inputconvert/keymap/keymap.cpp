@@ -374,8 +374,7 @@ void KeyMap::setSteerWheelMapNode(KeyMapNode &keyMapNode, const QJsonObject &nod
     }
 
     keyMapNode.type = type;
-    getItemDouble(node, "radiusOffset");
-    keyMapNode.data.steerWheel.left = { leftKey.first, leftKey.second, QPointF(0, 0), QPointF(0, 0),  };
+    keyMapNode.data.steerWheel.left = { leftKey.first, leftKey.second, QPointF(0, 0), QPointF(0, 0), getItemDouble(node, "leftOffset") };
     keyMapNode.data.steerWheel.right = { rightKey.first, rightKey.second, QPointF(0, 0), QPointF(0, 0), getItemDouble(node, "rightOffset") };
     keyMapNode.data.steerWheel.up = { upKey.first, upKey.second, QPointF(0, 0), QPointF(0, 0), getItemDouble(node, "upOffset") };
     keyMapNode.data.steerWheel.down = { downKey.first, downKey.second, QPointF(0, 0), QPointF(0, 0), getItemDouble(node, "downOffset") };
@@ -462,7 +461,7 @@ void KeyMap::setClickMapNode(KeyMapNode &keyMapNode, const QJsonObject &node, co
     }
     keyMapNode.type = type;
     keyMapNode.data.click.keyNode.type = key.first;
-    keyMapNode.data.click.keyNode.key = key.second;
+    setModifierKey(node, keyMapNode,key);
     keyMapNode.data.click.keyNode.pos = getItemPos(node, "pos");
     keyMapNode.data.click.keyNode.androidKey = static_cast<AndroidKeycode>(static_cast<int>(getItemDouble(node, "androidKey")));
     setCommonProperties(node, keyMapNode);
@@ -567,7 +566,7 @@ const KeyMap::KeyMapNode &KeyMap::getKeyMapNode(int key)
     return *p;
 }
 
-const KeyMap::KeyMapNode &KeyMap::getKeyMapNodeKey(int key)
+KeyMap::KeyMapNode KeyMap::getKeyMapNodeKey(int key)
 {
     return *m_rmapKey.value(key, &m_invalidNode);
 }
@@ -916,4 +915,18 @@ bool KeyMap::checkForBurstClick(const QJsonObject &node) {
 
 bool KeyMap::getCustomMouseClick() const {
     return m_customMouseClick;
+}
+
+void KeyMap::setModifierKey(const QJsonObject &node, KeyMap::KeyMapNode &keyMapNode, QPair<ActionType, int> key) {
+    keyMapNode.data.click.keyNode.key = key.second;
+    if (!checkItemString(node, "modifier")) return;
+    const QPair<ActionType, int> modifierKey = getItemKey(node, "modifier");
+    if (modifierKey.second != Qt::Key_Control &&
+        modifierKey.second != Qt::Key_Shift &&
+        modifierKey.second != Qt::Key_Alt) {
+        qWarning() << "json error: key:"<<key.second<<"modifier invalid:"<<modifierKey.second;
+        return;
+    }
+    qDebug() << "key:" << key.second << "modifier:" << modifierKey.second;
+    keyMapNode.data.click.keyNode.key += modifierKey.second;
 }

@@ -241,6 +241,10 @@ private:
     void resetMouseMove(const QPointF pos);
 
     double getRandomDouble(double min, double max);
+
+    void dragStop();
+
+    const KeyMap::KeyMapNode getNode(const QKeyEvent *from);
 };
 
 #endif // INPUTCONVERTGAME_H
