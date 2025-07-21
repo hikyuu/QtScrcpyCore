@@ -7,6 +7,8 @@
 #include <QScreen>
 #include <QWidget>
 #include <QMutex>
+#include <QTimer>
+#include <QElapsedTimer>
 
 #include "inputconvertnormal.h"
 #include "keymap.h"
@@ -120,13 +122,15 @@ private slots:
     void onWheelUpTimer();
 
 private:
+    QElapsedTimer elapsedTimer;
+    const double centerX =0.6, centerY = 0.6, radius=0.1;
     QSize m_frameSize;
     QSize m_showSize;
     double m_showSizeRatio;
     bool m_gameMap = false;
     bool m_customNormalMouseClick = false;
     //准心模式鼠标移动镜头
-    bool m_needBackMouseMove = false;
+    bool m_pointerMode = false;
     int m_multiTouchID[MULTI_TOUCH_MAX_NUM] = {0};
     KeyMap m_keyMap;
     QMap<int, QPointF> m_keyPosMap;
@@ -170,15 +174,21 @@ private:
     // mouse move
     struct
     {
+        QPointF startPos;
         QPointF lastConvertPos;
+        QPointF cursorPos;
+        QPoint centerPos;
+        bool outOfBoundary = false;
         QPointF lastPos = { 0.0, 0.0 };
-        QPoint centerPos = { 0, 0 };
         int focusTouchID = -1;
         bool touching = false;
         int timer = 0;
+        QTimer resetMoveTimer;
+        int resetMoveDelay = 100;
         bool needResetTouch = true;
         bool smallEyes = false;
         QMutex mouseMutex;
+        int count = 0;
     } m_ctrlMouseMove;
 
     // for drag delay
@@ -212,7 +222,7 @@ private:
     void processDualMode(KeyMap::KeyMapNode &node, const QKeyEvent *from);
     void processType(KeyMap::KeyMapNode node, const QKeyEvent *from);
     void setMousePos(bool b, const KeyMap::KeyMapNode &node);
-    static QPointF shakePos(QPointF pos, double offsetX, double offsetY);
+    QPointF shakePos(QPointF pos, double offsetX, double offsetY);
     void processPressRelease(const KeyMap::KeyMapNode &node, const QKeyEvent *from);
     void switchMouse(const KeyMap::KeyMapNode &node, bool forceSwitchOn, bool forceSwitchOff);
 
@@ -232,6 +242,8 @@ private:
 
     void stopMobaWheel(double delay) const;
 
+    void InputConvertGame::onResetMoveTimer();
+
     void onStopMobaWheelTimer();
 
     void detachIndexID(int i);
@@ -245,6 +257,10 @@ private:
     void dragStop();
 
     const KeyMap::KeyMapNode getNode(const QKeyEvent *from);
+
+    bool checkBoundary(const QPointF &currentConvertPos) const;
+
+    bool mouseMove(QPointF &currentConvertPos);
 };
 
 #endif // INPUTCONVERTGAME_H
