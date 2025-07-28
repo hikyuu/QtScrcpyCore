@@ -74,7 +74,7 @@ protected:
     // mouse
     bool processMouseClick(const QMouseEvent *from);
 
-    bool processCustomMouseClick(const QMouseEvent *from, const QSize &frameSize, const QSize &showSize);
+    bool processCustomMouseClick(const QMouseEvent *from);
 
     bool processMouseMove(const QMouseEvent *from);
 
@@ -82,7 +82,7 @@ protected:
 
     bool mouseMoveStartTouch(const QPointF pos);
 
-    void mouseMoveStopTouch();
+    void mouseMoveStopTouch(bool delay);
 
     void startMouseMoveTimer();
 
