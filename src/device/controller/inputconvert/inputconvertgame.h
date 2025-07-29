@@ -9,6 +9,7 @@
 #include <QMutex>
 #include <QTimer>
 #include <QElapsedTimer>
+#include <QPainterPath>
 
 #include "inputconvertnormal.h"
 #include "keymap.h"
@@ -131,7 +132,8 @@ private:
     bool m_customNormalMouseClick = false;
     //准心模式鼠标移动镜头
     bool m_pointerMode = false;
-    int m_multiTouchID[MULTI_TOUCH_MAX_NUM] = {0};
+    QElapsedTimer timer;
+    QList<int> m_multiTouchID;
     KeyMap m_keyMap;
     QMap<int, QPointF> m_keyPosMap;
     QSet<int> m_burstClickKeySet;
@@ -153,6 +155,7 @@ private:
         struct {
             QPointF currentPos;
             QTimer *timer = nullptr;
+            QPainterPath path;
             QQueue<QPointF> queuePos;
             QQueue<quint32> queueTimer;
             int pressedNum = 0;
@@ -182,6 +185,9 @@ private:
         QPointF lastPos = { 0.0, 0.0 };
         int focusTouchID = -1;
         bool touching = false;
+        double leftBoundary = 0.3;
+        double topBoundary = 0.1;
+        double maxBoundary = 0.9;
         int timer = 0;
         QTimer resetMoveTimer;
         int resetMoveDelay = 100;
@@ -261,6 +267,15 @@ private:
     bool checkBoundary(const QPointF &currentConvertPos) const;
 
     bool mouseMove(QPointF &currentConvertPos);
+
+    double generateDouble(double min, double max);
+
+    void generateArcPath(const QPointF &start, const QPointF &end);
+
+    void getDelayQueue(const QPointF &start, const QPointF &end, const double &distanceStep, quint32 stepTimer,
+                       QQueue<QPointF> &queuePos, QQueue<quint32> &queueTimer);
+
+    qreal randInRange(qreal min, qreal max);
 };
 
 #endif // INPUTCONVERTGAME_H
