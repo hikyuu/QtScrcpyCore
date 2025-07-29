@@ -15,6 +15,7 @@
 #include "keymap.h"
 
 #define MULTI_TOUCH_MAX_NUM 10
+const int MAX_HISTORY = 3;       // 保留最近3个点
 class InputConvertGame : public InputConvertNormal {
 Q_OBJECT
 public:
@@ -138,6 +139,7 @@ private:
     QMap<int, QPointF> m_keyPosMap;
     QSet<int> m_burstClickKeySet;
     QPointF m_currentSpeedRatio;
+//    QPoint lastAbsolutePos;
     // steer wheel
     struct {
         // the first key wheelPressed
@@ -156,6 +158,7 @@ private:
             QPointF currentPos;
             QTimer *timer = nullptr;
             QPainterPath path;
+            QVector<QPointF> historyPoints;
             QQueue<QPointF> queuePos;
             QQueue<quint32> queueTimer;
             int pressedNum = 0;
@@ -274,6 +277,12 @@ private:
 
     void getDelayQueue(const QPointF &start, const QPointF &end, const double &distanceStep, quint32 stepTimer,
                        QQueue<QPointF> &queuePos, QQueue<quint32> &queueTimer);
+
+    void updatePosition(const QPointF &newPos);
+
+    QVector<QPointF> calculateControlPoints();
+
+    QPainterPath generateBezierPath();
 
     qreal randInRange(qreal min, qreal max);
 };

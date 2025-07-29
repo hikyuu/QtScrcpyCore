@@ -15,6 +15,7 @@
 #define CURSOR_POS_CHECK_WIDTH 250
 #define CURSOR_POS_CHECK_HEIGHT 150
 
+
 InputConvertGame::InputConvertGame(Controller *controller) : InputConvertNormal(controller)
 {
     m_ctrlSteerWheel.delayData.timer = new QTimer(this);
@@ -484,7 +485,6 @@ void InputConvertGame::onWheelTimer(int key) {
     int id = getTouchID(key);
     m_ctrlSteerWheel.delayData.currentPos = m_ctrlSteerWheel.delayData.queuePos.dequeue();
     sendTouchMoveEvent(id, m_ctrlSteerWheel.delayData.currentPos);
-
     if (m_ctrlSteerWheel.delayData.queuePos.empty() && m_ctrlSteerWheel.delayData.pressedNum == 0) {
         QMutexLocker locker(&m_ctrlSteerWheel.steerMutex);
         if (!m_ctrlSteerWheel.wheeling) {
@@ -496,9 +496,17 @@ void InputConvertGame::onWheelTimer(int key) {
         m_ctrlSteerWheel.wheeling = false;
         return;
     }
-
     if (!m_ctrlSteerWheel.delayData.queuePos.empty()) {
         m_ctrlSteerWheel.delayData.timer->start(m_ctrlSteerWheel.delayData.queueTimer.dequeue());
+    } else {
+        QPointF shakePos{
+                m_ctrlSteerWheel.delayData.currentPos.x() +
+                static_cast<double>(QRandomGenerator::global()->bounded(-2, 3)) / m_frameSize.width(),
+                m_ctrlSteerWheel.delayData.currentPos.y() +
+                static_cast<double>(QRandomGenerator::global()->bounded(-2, 3)) / m_frameSize.height()
+        };
+        m_ctrlSteerWheel.delayData.queuePos.enqueue(shakePos);
+        m_ctrlSteerWheel.delayData.timer->start(QRandomGenerator::global()->bounded(10, 300));
     }
 }
 
@@ -545,19 +553,19 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
 
     if (m_ctrlSteerWheel.pressedUp) {
         ++pressedNum;
-        offset.ry() -= node.data.steerWheel.up.extendOffset;
+        offset.ry() -= node.data.steerWheel.up.extendOffset + shakeNumber / 3;
     }
     if (m_ctrlSteerWheel.pressedRight) {
         ++pressedNum;
-        offset.rx() += node.data.steerWheel.right.extendOffset;
+        offset.rx() += node.data.steerWheel.right.extendOffset + shakeNumber;
     }
     if (m_ctrlSteerWheel.pressedDown) {
         ++pressedNum;
-        offset.ry() += node.data.steerWheel.down.extendOffset;
+        offset.ry() += node.data.steerWheel.down.extendOffset+ shakeNumber;
     }
     if (m_ctrlSteerWheel.pressedLeft) {
         ++pressedNum;
-        offset.rx() -= node.data.steerWheel.left.extendOffset;
+        offset.rx() -= node.data.steerWheel.left.extendOffset + shakeNumber;
     }
     m_ctrlSteerWheel.delayData.pressedNum = pressedNum;
 
@@ -581,13 +589,13 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
 
     if (m_ctrlSteerWheel.pressedBoost) {
         if (m_ctrlSteerWheel.pressedUp) {
-            offset.ry() -= node.data.steerWheel.boost.extendOffset;
+            offset.ry() -= node.data.steerWheel.boost.extendOffset + shakeNumber / 3;
         }
         if (m_ctrlSteerWheel.pressedRight) {
-            offset.rx() += node.data.steerWheel.boost.extendOffset/2;
+            offset.rx() += node.data.steerWheel.boost.extendOffset / 2 + shakeNumber;
         }
         if (m_ctrlSteerWheel.pressedLeft) {
-            offset.rx() -= node.data.steerWheel.boost.extendOffset/2;
+            offset.rx() -= node.data.steerWheel.boost.extendOffset / 2 + shakeNumber;
         }
     }
 
@@ -609,13 +617,13 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
             getDelayQueue(
                     m_ctrlSteerWheel.delayData.currentPos,
                     m_keyPosMap[Qt::Key_sterling],
-                    0.005f,
+                    0.01f,
                     0.0005f,
                     4,
                     4,
                     m_ctrlSteerWheel.delayData.queuePos,
                     m_ctrlSteerWheel.delayData.queueTimer);
-            m_ctrlSteerWheel.delayData.timer->start();
+            m_ctrlSteerWheel.delayData.timer->start(4);
             return;
         }
         QMutexLocker locker(&m_ctrlSteerWheel.steerMutex);
@@ -635,7 +643,7 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
     m_ctrlSteerWheel.delayData.queueTimer.clear();
     m_ctrlSteerWheel.delayData.queuePos.clear();
 
-    double distanceStep = 0.005f;
+    double distanceStep = 0.004f;
     if (m_ctrlSteerWheel.pressedBoost) {
         distanceStep += distanceStep;
     }
@@ -652,9 +660,11 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
         }
         m_ctrlSteerWheel.wheeling = true;
         int id = attachTouchID(m_ctrlSteerWheel.touchKey);
-        const QPointF centerPos = shakePos(node.data.steerWheel.centerPos, 0.01, 0.01);
+        const QPointF centerPos = shakePos(node.data.steerWheel.centerPos, 0.015, 0.02);
         m_keyPosMap[Qt::Key_sterling] = centerPos;
         sendTouchDownEvent(id, centerPos);
+        m_ctrlSteerWheel.delayData.historyPoints.clear();
+        m_ctrlSteerWheel.delayData.historyPoints.append(centerPos);
         getDelayQueue(
                 centerPos,
                 centerPos + offset,
@@ -664,7 +674,6 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
                 m_ctrlSteerWheel.delayData.queueTimer);
 
     } else {
-//        qDebug() << "change press";
         getDelayQueue(
                 m_ctrlSteerWheel.delayData.currentPos,
                 m_keyPosMap[Qt::Key_sterling] + offset,
@@ -673,9 +682,16 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
                 m_ctrlSteerWheel.delayData.queuePos,
                 m_ctrlSteerWheel.delayData.queueTimer);
     }
-    m_ctrlSteerWheel.delayData.timer->start();
+    m_ctrlSteerWheel.delayData.timer->start(4);
 }
 // -------- key event --------
+
+void InputConvertGame::updatePosition(const QPointF& newPos) {
+    m_ctrlSteerWheel.delayData.historyPoints.append(newPos);
+    if (m_ctrlSteerWheel.delayData.historyPoints.size() > MAX_HISTORY) {
+        m_ctrlSteerWheel.delayData.historyPoints.removeFirst();  // 移除最旧的点
+    }
+}
 
 void InputConvertGame::getDelayQueue(
         const QPointF &start,
@@ -695,26 +711,10 @@ void InputConvertGame::getDelayQueue(
     double e = (fabs(dx) > fabs(dy)) ? fabs(dx) : fabs(dy);
     e /= distanceStep;
     qreal percent = 1.0 / e;
+
     qDebug() << "getDelayQueue e:" << e << "percent:" << percent;
-
-    m_ctrlSteerWheel.delayData.path = QPainterPath();
-    m_ctrlSteerWheel.delayData.path.moveTo(start);
-    QPointF dir = end - start; // 方向向量
-    QPointF perpDir(-dir.y(), dir.x());  // 垂直向量（法线方向）
-
-    auto randSignedOffset = [this](qreal min, qreal max) -> qreal {
-        qreal base = randInRange(min, max);
-        return QRandomGenerator::global()->bounded(2) ? base : -base; // 50% 概率取负值
-    };
-    // 随机化参数
-    qreal alpha = randInRange(0.3, 0.7);       // [0.3, 0.7)
-    qreal gamma = randInRange(0.3, 0.7);       // [0.3, 0.7)
-    qreal betaScale = randSignedOffset(0.05, 0.15); // [0.05, 0.15)
-    qreal deltaScale = randSignedOffset(0.05, 0.15); // [0.05, 0.15)
-    // 计算控制点（靠近连线）
-    QPointF control1 = start + alpha * dir + betaScale * perpDir;
-    QPointF control2 = end - gamma * dir + deltaScale * perpDir;
-    m_ctrlSteerWheel.delayData.path.cubicTo(control1, control2, end); // 三次贝塞尔曲线
+    updatePosition(end);
+    m_ctrlSteerWheel.delayData.path = generateBezierPath();
 
     QQueue<QPointF> queue;
     QQueue<quint32> queue2;
@@ -723,14 +723,78 @@ void InputConvertGame::getDelayQueue(
         queue.enqueue(pos);
         queue2.enqueue(stepTimer);
     }
-    queue.enqueue(end);
-    queue2.enqueue(stepTimer);
     queuePos = queue;
     queueTimer = queue2;
 }
 
+QVector<QPointF> InputConvertGame::calculateControlPoints() {
+    QVector<QPointF> ctrlPoints;
+    const auto &historyPoints = m_ctrlSteerWheel.delayData.historyPoints;
+
+    if (historyPoints.size() < 2) return ctrlPoints;
+
+    // 情况1：只有2个历史点（线性插值）
+    if (historyPoints.size() == 2) {
+        QPointF dir = historyPoints[1] - historyPoints[0]; // 方向向量
+        QPointF perpDir(-dir.y(), dir.x());  // 垂直向量（法线方向）
+
+        auto randSignedOffset = [this](qreal min, qreal max) -> qreal {
+            qreal base = randInRange(min, max);
+            return QRandomGenerator::global()->bounded(2) ? base : -base; // 50% 概率取负值
+        };
+        // 随机化参数
+        qreal alpha = randInRange(0.3, 0.7);       // [0.3, 0.7)
+        qreal gamma = randInRange(0.3, 0.7);       // [0.3, 0.7)
+        qreal betaScale = randSignedOffset(0.1, 0.3); // [0.05, 0.15)
+        qreal deltaScale = randSignedOffset(0.1, 0.3); // [0.05, 0.15)
+        // 计算控制点（靠近连线）
+        QPointF control1 = historyPoints[0] + alpha * dir + betaScale * perpDir;
+        QPointF control2 = historyPoints[1] - gamma * dir + deltaScale * perpDir;
+        ctrlPoints << control1 << control2 << historyPoints[1];
+        return ctrlPoints;
+    }
+
+    // 情况2：有3个历史点（生成平滑曲线）
+    // 控制点1：P1 + (P2 - P0) * k，保证切线连续
+    QPointF tangent = historyPoints[2] - historyPoints[0];
+    QPointF ctrl1 = historyPoints[1] + tangent * 0.5;  // 0.2为平滑系数
+
+    // 控制点2：P2 - (P2 - P1) * k，避免曲率突变
+    QPointF dirPrev = historyPoints[1] - historyPoints[0];
+    QPointF ctrl2 = historyPoints[2] - dirPrev * 0.5;
+
+    ctrlPoints << ctrl1 << ctrl2 << historyPoints[2];
+    return ctrlPoints;
+}
+
 qreal InputConvertGame::randInRange (qreal min, qreal max)  {
     return min + (max - min) * QRandomGenerator::global()->generateDouble();
+}
+// 生成贝塞尔曲线路径（用于绘制）
+QPainterPath InputConvertGame::generateBezierPath() {
+    QPainterPath path;
+    if (m_ctrlSteerWheel.delayData.historyPoints.isEmpty()) return path;
+
+    path.moveTo(m_ctrlSteerWheel.delayData.historyPoints.first());
+
+    if (m_ctrlSteerWheel.delayData.historyPoints.size() >= 3) {
+        path.moveTo(m_ctrlSteerWheel.delayData.historyPoints[1]);
+    }
+
+    auto ctrlPoints = calculateControlPoints();
+
+    // 根据控制点数量选择曲线类型
+    switch (ctrlPoints.size()) {
+        case 2:  // 二次贝塞尔曲线
+            path.quadTo(ctrlPoints[0], ctrlPoints[1]);
+            break;
+        case 3:  // 三次贝塞尔曲线
+            path.cubicTo(ctrlPoints[0], ctrlPoints[1], ctrlPoints[2]);
+            break;
+        default: // 线性路径
+            path.lineTo(m_ctrlSteerWheel.delayData.historyPoints.last());
+    }
+    return path;
 };
 
 void InputConvertGame::processKeyClick(bool clickTwice, const KeyMap::KeyMapNode &node, const QKeyEvent *from)
@@ -1605,7 +1669,7 @@ bool InputConvertGame::processMobaWheel(const QMouseEvent *from) {
                       m_ctrlSteerWheel.delayData.queuePos,
                       m_ctrlSteerWheel.delayData.queueTimer);
         m_ctrlSteerWheel.delayData.pressedNum++;
-        m_ctrlSteerWheel.delayData.timer->start();
+        m_ctrlSteerWheel.delayData.timer->start(0);
         return true;
     }
     if (QEvent::MouseButtonRelease == from->type()) {
