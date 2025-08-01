@@ -574,6 +574,16 @@ void Device::installApkRequest(const QString &apkFile)
     }
 }
 
+void Device::rawMouseEvent(int dx, int dy, DWORD buttons){
+    if (!m_controller) {
+        return;
+    }
+    m_controller->rawMouseEvent(dx, dy, buttons);
+    for (const auto& item : m_deviceObservers) {
+        item->rawMouseEvent(dx, dy, buttons);
+    }
+}
+
 void Device::mouseEvent(const QMouseEvent *from, const QSize &frameSize, const QSize &showSize)
 {
     if (!m_controller) {
@@ -593,7 +603,6 @@ void Device::wheelEvent(const QWheelEvent *from, const QSize &frameSize, const Q
         return;
     }
     m_controller->wheelEvent(from, frameSize, showSize);
-
     for (const auto& item : m_deviceObservers) {
         item->wheelEvent(from, frameSize, showSize);
     }

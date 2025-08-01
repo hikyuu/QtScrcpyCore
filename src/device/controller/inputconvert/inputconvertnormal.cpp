@@ -55,6 +55,11 @@ void InputConvertNormal::mouseEvent(const QMouseEvent *from, const QSize &frameS
     sendControlMsg(controlMsg);
 }
 
+void InputConvertNormal::rawMouseEvent(int dx, int dy, DWORD buttons)
+{
+    return;
+}
+
 void InputConvertNormal::wheelEvent(const QWheelEvent *from, const QSize &frameSize, const QSize &showSize)
 {
     if (!from || from->angleDelta().isNull()) {

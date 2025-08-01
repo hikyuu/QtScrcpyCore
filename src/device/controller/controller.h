@@ -42,6 +42,7 @@ public:
     void mouseEvent(const QMouseEvent *from, const QSize &frameSize, const QSize &showSize);
     void wheelEvent(const QWheelEvent *from, const QSize &frameSize, const QSize &showSize);
     void keyEvent(const QKeyEvent *from, const QSize &frameSize, const QSize &showSize);
+    void rawMouseEvent(int dx, int dy, DWORD buttons);
 
     // turn the screen on if it was off, press BACK otherwise
     // If the screen is off, it is turned on only on down
@@ -67,6 +68,7 @@ private:
     QPointer<Receiver> m_receiver;
     QPointer<InputConvertBase> m_inputConvert;
     std::function<qint64(const QByteArray&)> m_sendData = Q_NULLPTR;
+
 };
 
 #endif // CONTROLLER_H

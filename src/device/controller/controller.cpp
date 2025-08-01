@@ -55,6 +55,7 @@ void Controller::updateScript(QString gameScript)
         connect(convertGame, &InputConvertGame::mouseCursorHided, this, [this](bool hide) {
             emit mouseCursorHided(hide);
         });
+
     } else {
         m_inputConvert = new InputConvertNormal(this);
     }
@@ -209,6 +210,13 @@ void Controller::mouseEvent(const QMouseEvent *from, const QSize &frameSize, con
         m_inputConvert->mouseEvent(from, frameSize, showSize);
     }
 }
+
+void Controller::rawMouseEvent(int dx, int dy, DWORD buttons){
+    if (m_inputConvert) {
+        m_inputConvert->rawMouseEvent(dx, dy, buttons);
+    }
+};
+
 
 void Controller::wheelEvent(const QWheelEvent *from, const QSize &frameSize, const QSize &showSize)
 {

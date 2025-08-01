@@ -27,6 +27,8 @@ public:
 
     virtual void wheelEvent(const QWheelEvent *from, const QSize &frameSize, const QSize &showSize);
 
+    virtual void rawMouseEvent(int dx, int dy, DWORD buttons);
+
     virtual void keyEvent(const QKeyEvent *from, const QSize &frameSize, const QSize &showSize);
 
     virtual bool isCurrentCustomKeymap();
@@ -125,7 +127,6 @@ private slots:
 
 private:
     QElapsedTimer elapsedTimer;
-    const double centerX =0.6, centerY = 0.6, radius=0.1;
     QSize m_frameSize;
     QSize m_showSize;
     double m_showSizeRatio;
@@ -284,7 +285,11 @@ private:
 
     QPainterPath generateBezierPath();
 
-    qreal randInRange(qreal min, qreal max);
+    bool checkOutOfBoundary(const QPoint &pos, int oneOfSevenWidth, int oneOfSevenHeight) const;
+
+    double distanceBetweenPoints(const QPointF &point1, const QPointF &point2);
+
+    QPointF generatePos(QPointF pos, double radius, double k);
 };
 
 #endif // INPUTCONVERTGAME_H

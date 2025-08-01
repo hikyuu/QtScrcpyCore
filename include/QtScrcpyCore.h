@@ -3,6 +3,9 @@
 #include <QMouseEvent>
 
 #include "QtScrcpyCoreDef.h"
+#ifdef Q_OS_WIN32
+#include "../util/winutils.h"
+#endif
 
 namespace qsc {
 
@@ -44,6 +47,13 @@ public:
         Q_UNUSED(frameSize);
         Q_UNUSED(showSize);
     }
+
+    virtual void rawMouseEvent(int dx, int dy, DWORD buttons){
+        Q_UNUSED(dx);
+        Q_UNUSED(dy);
+        Q_UNUSED(buttons);
+    };
+
 
     virtual void postGoBack() {}
     virtual void postGoHome() {}
@@ -90,6 +100,7 @@ public:
     virtual bool connectDevice() = 0;
     virtual void disconnectDevice() = 0;
 
+    virtual void rawMouseEvent(int dx, int dy, DWORD buttons) = 0;
     virtual void mouseEvent(const QMouseEvent *from, const QSize &frameSize, const QSize &showSize) = 0;
     virtual void wheelEvent(const QWheelEvent *from, const QSize &frameSize, const QSize &showSize) = 0;
     virtual void keyEvent(const QKeyEvent *from, const QSize &frameSize, const QSize &showSize) = 0;

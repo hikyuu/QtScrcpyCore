@@ -45,6 +45,7 @@ namespace qsc
         void mouseEvent(const QMouseEvent *from, const QSize &frameSize, const QSize &showSize) override;
         void wheelEvent(const QWheelEvent *from, const QSize &frameSize, const QSize &showSize) override;
         void keyEvent(const QKeyEvent *from, const QSize &frameSize, const QSize &showSize) override;
+        void rawMouseEvent(int dx, int dy, DWORD buttons) override;
 
         void postGoBack() override;
         void postGoHome() override;
@@ -97,6 +98,7 @@ namespace qsc
         DeviceParams m_params;
         std::set<DeviceObserver *> m_deviceObservers;
         void *m_userData = nullptr;
+
     };
 
 } // namespace qsc
