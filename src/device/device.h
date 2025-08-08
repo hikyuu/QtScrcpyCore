@@ -46,6 +46,7 @@ namespace qsc
         void wheelEvent(const QWheelEvent *from, const QSize &frameSize, const QSize &showSize) override;
         void keyEvent(const QKeyEvent *from, const QSize &frameSize, const QSize &showSize) override;
         void rawMouseEvent(int dx, int dy, DWORD buttons) override;
+        void activated(bool isActive) override;
 
         void postGoBack() override;
         void postGoHome() override;

@@ -216,7 +216,11 @@ void Controller::rawMouseEvent(int dx, int dy, DWORD buttons){
         m_inputConvert->rawMouseEvent(dx, dy, buttons);
     }
 };
-
+void Controller::activated(bool isActive){
+    if (m_inputConvert) {
+        m_inputConvert->activated(isActive);
+    }
+};
 
 void Controller::wheelEvent(const QWheelEvent *from, const QSize &frameSize, const QSize &showSize)
 {

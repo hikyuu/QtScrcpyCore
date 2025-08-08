@@ -43,7 +43,7 @@ public:
     void wheelEvent(const QWheelEvent *from, const QSize &frameSize, const QSize &showSize);
     void keyEvent(const QKeyEvent *from, const QSize &frameSize, const QSize &showSize);
     void rawMouseEvent(int dx, int dy, DWORD buttons);
-
+    void activated(bool isActive);
     // turn the screen on if it was off, press BACK otherwise
     // If the screen is off, it is turned on only on down
     void postBackOrScreenOn(bool down);

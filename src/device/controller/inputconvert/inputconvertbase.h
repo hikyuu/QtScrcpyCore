@@ -21,6 +21,7 @@ public:
     // to which the absolute position apply, to scale it accordingly
     virtual void mouseEvent(const QMouseEvent *from, const QSize &frameSize, const QSize &showSize) = 0;
     virtual void rawMouseEvent(int dx, int dy, DWORD buttons) = 0;
+    virtual void activated(bool isActive)  = 0;
     virtual void wheelEvent(const QWheelEvent *from, const QSize &frameSize, const QSize &showSize) = 0;
     virtual void keyEvent(const QKeyEvent *from, const QSize &frameSize, const QSize &showSize) = 0;
     virtual bool isCurrentCustomKeymap()

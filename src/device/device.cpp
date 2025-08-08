@@ -583,7 +583,15 @@ void Device::rawMouseEvent(int dx, int dy, DWORD buttons){
         item->rawMouseEvent(dx, dy, buttons);
     }
 }
-
+void Device::activated(bool isActive){
+    if (!m_controller) {
+        return;
+    }
+    m_controller->activated(isActive);
+    for (const auto& item : m_deviceObservers) {
+        item->activated(isActive);
+    }
+}
 void Device::mouseEvent(const QMouseEvent *from, const QSize &frameSize, const QSize &showSize)
 {
     if (!m_controller) {

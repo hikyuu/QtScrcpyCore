@@ -51,6 +51,7 @@ public slots:
     void onHideMouseCursor(bool hide);
     void onAdbProcessResult(qsc::AdbProcess::ADB_EXEC_RESULT processResult);
     bool disableTunnelForward();
+
 };
 
 #endif //MOUSE_H
