@@ -119,7 +119,7 @@ private slots:
     void onWheelUpTimer();
 
 private:
-    QElapsedTimer elapsedTimer;
+    QElapsedTimer m_elapsedTimer;
     QSize m_frameSize;
     QSize m_showSize;
     double m_showSizeRatio;
@@ -145,8 +145,10 @@ private:
         bool pressedBoost = false;
         bool clickMode = false;
         bool wheeling = false;
+        bool simulateWheel = false;
         QMutex steerMutex;
         QPointF clickPos;
+        QPointF centerPos;
         // for delay
         struct {
             QPointF currentPos;
@@ -157,6 +159,10 @@ private:
             QQueue<quint32> queueTimer;
             int pressedNum = 0;
             QPointF endPos;
+            QPointF shakeEndPos;
+            QPointF offsetY;
+            QPointF middlePoint;
+            bool isEnd = true;
         } delayData;
         struct{
             double speedRatio;
@@ -190,6 +196,7 @@ private:
         int resetMoveDelay = 100;
         bool needResetTouch = true;
         bool smallEyes = false;
+        bool rotaryTable = false;
         QMutex mouseMutex;
         int count = 0;
     } m_ctrlMouseMove;
@@ -233,7 +240,7 @@ private:
     void processDualMode(KeyMap::KeyMapNode &node, const QKeyEvent *from);
     void processType(KeyMap::KeyMapNode node, const QKeyEvent *from);
     void setMousePos(bool b, const KeyMap::KeyMapNode &node);
-    QPointF shakePos(QPointF pos, double offsetX, double offsetY);
+
     void processPressRelease(const KeyMap::KeyMapNode &node, const QKeyEvent *from);
     void switchMouse(const KeyMap::KeyMapNode &node, bool forceSwitchOn, bool forceSwitchOff);
 
@@ -277,8 +284,8 @@ private:
 
     void generateArcPath(const QPointF &start, const QPointF &end);
 
-    void getDelayQueue(quint32 stepTimer, bool slowEnd, QQueue<QPointF> &queuePos,
-                       QQueue<quint32> &queueTimer);
+    void getDelayQueue(QQueue<QPointF> &queuePos, QQueue<quint32> &queueTimer, bool detect, quint32 stepTimer,
+                       quint32 randomTimer) const;
 
     void updatePosition(const QPointF &newPos);
 
@@ -288,15 +295,13 @@ private:
 
     bool checkOutOfBoundary(const QPoint &pos, int oneOfSevenWidth, int oneOfSevenHeight) const;
 
-    static double distanceBetweenPoints(const QPointF &point1, const QPointF &point2);
-
     static QPointF generatePos(QPointF pos, double radius, double k);
 
     void activated(bool isActive);
 
-    QPointF extendLine(const QPointF &p1, const QPointF &p2, double distance);
+    static QPainterPath generateLinePath(QPointF start, QPointF end);
 
-    QPainterPath generateLinePath(QPointF start, QPointF end);
+    static QPointF pointAtPercent(const QPointF &start, const QPointF &end, double percent);
 };
 
 #endif // INPUTCONVERTGAME_H

@@ -64,9 +64,14 @@ void Mouse::onMouseEvent(const QMouseEvent *from, const QSize &frameSize, const 
     if (m_hideMouseCursor) {
         return;
     }
+    if (m_showSize != showSize) {
+        m_frameSize = frameSize;
+        m_showSize = showSize;
+    }
     QPointF pos = from->localPos();
     pos.setX(pos.x() * frameSize.width() / showSize.width());
     pos.setY(pos.y() * frameSize.height() / showSize.height());
+
     sendMousePos(pos, m_hideMouseCursor);
 }
 
@@ -90,7 +95,7 @@ void Mouse::onHideMouseCursor(bool hide)
     m_hideMouseCursor = hide;
     QWidget *activeWindow = QApplication::activeWindow();
     if (activeWindow) {
-        QPoint center = activeWindow->mapToGlobal(activeWindow->rect().center());
+        QPoint center = {m_frameSize.width() / 2, m_frameSize.height() / 2};
         sendMousePos(center, m_hideMouseCursor);
     }
 }

@@ -113,6 +113,7 @@ public:
                 QPointF centerPos = { 0.0, 0.0 };
                 KeyNode left, right, up, down, switchKey;
                 KeyNode boost;
+                bool simulateWheel;
             } steerWheel;
             struct
             {
@@ -132,6 +133,7 @@ public:
             {
                 KeyNode keyNode;
                 QPointF speedRatio = { 1.0, 1.0 };
+                int delay;
             } rotaryTable;
             struct
             {

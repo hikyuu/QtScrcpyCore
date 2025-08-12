@@ -33,6 +33,8 @@ private:
     QPointer<Mouse> m_mouse = Q_NULLPTR;
     //true为hide,false为show
     bool m_hideMouseCursor = false;
+    QSize m_frameSize;
+    QSize m_showSize;
 
 public:
     Mouse(QObject *parent, qsc::DeviceParams params);
