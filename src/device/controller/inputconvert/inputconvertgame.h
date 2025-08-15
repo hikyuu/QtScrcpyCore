@@ -98,8 +98,8 @@ protected:
 
     void hideMouseCursor(bool hide);
 
-    void getDelayQueue(const QPointF &start, const QPointF &end, quint32 lowestTimer,
-                       QQueue<QPointF> &queuePos, QQueue<quint32> &queueTimer);
+    void getCurvedDelayQueue(const QPointF &start, const QPointF &end, int stepCount, QQueue<QPointF> &queuePos,
+                             QQueue<quint32> &queueTimer);
 
 signals:
 
@@ -146,6 +146,7 @@ private:
         bool clickMode = false;
         bool wheeling = false;
         bool simulateWheel = false;
+        bool keepMove = false;
         QMutex steerMutex;
         QPointF clickPos;
         QPointF centerPos;
@@ -208,6 +209,7 @@ private:
         QPointF currentPos;
         QTimer *timer = nullptr;
         QTimer *upTimer = nullptr;
+        QPainterPath path;
         QQueue<QPointF> queuePos;
         QQueue<quint32> queueTimer;
         int pressKey = 0;
@@ -258,7 +260,7 @@ private:
 
     void cycleClick(QPointF pos, int clickInterval, int i1);
 
-    void stopMobaWheel(double delay) const;
+    void stopMobaWheel(int delay) const;
 
     void InputConvertGame::onResetMoveTimer();
 
@@ -285,7 +287,7 @@ private:
     void generateArcPath(const QPointF &start, const QPointF &end);
 
     void getDelayQueue(QQueue<QPointF> &queuePos, QQueue<quint32> &queueTimer, bool detect, quint32 stepTimer,
-                       quint32 randomTimer) const;
+                       quint32 randomTimer, int endFrame, QPainterPath &path) const;
 
     void updatePosition(const QPointF &newPos);
 

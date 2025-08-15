@@ -114,6 +114,7 @@ public:
                 KeyNode left, right, up, down, switchKey;
                 KeyNode boost;
                 bool simulateWheel;
+                bool keepMove;
             } steerWheel;
             struct
             {
@@ -150,6 +151,7 @@ public:
             } pressRelease;
             struct {
                 KeyNode keyNode;
+                KeyNode cancelSkill;
                 QPointF centerPos = {0.0, 0.0};
                 QPointF wheelPos = {0.2, 0.75};
                 double speedRatio = 3.0;

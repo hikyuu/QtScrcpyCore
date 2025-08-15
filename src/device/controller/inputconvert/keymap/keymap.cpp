@@ -354,6 +354,12 @@ void KeyMap::setSteerWheelMapNode(KeyMapNode &keyMapNode, const QJsonObject &nod
         keyMapNode.data.steerWheel.simulateWheel = false;
     }
 
+    if (checkItemBool(node, "keepMove")) {
+        keyMapNode.data.steerWheel.keepMove = getItemBool(node, "keepMove");
+    } else {
+        keyMapNode.data.steerWheel.keepMove = false;
+    }
+
     keyMapNode.type = type;
     keyMapNode.data.steerWheel.left = { leftKey.first, leftKey.second, QPointF(0, 0), QPointF(0, 0), getItemDouble(node, "leftOffset") };
     keyMapNode.data.steerWheel.right = { rightKey.first, rightKey.second, QPointF(0, 0), QPointF(0, 0), getItemDouble(node, "rightOffset") };
@@ -641,6 +647,8 @@ void KeyMap::makeReverseMap()
         case KMT_MOBA_WHEEL: {
             QMultiHash<int, KeyMapNode *> &m = node.data.mobaWheel.keyNode.type == AT_KEY ? m_rmapKey : m_rmapMouse;
             m.insert(node.data.mobaWheel.keyNode.key, &node);
+            QMultiHash<int, KeyMapNode *> &mc = node.data.mobaWheel.cancelSkill.type == AT_KEY ? m_rmapKey : m_rmapMouse;
+            m.insert(node.data.mobaWheel.cancelSkill.key, &node);
         } break;
         case KMT_MOBA_SKILL: {
             QMultiHash<int, KeyMapNode *> &m = node.data.mobaSkill.keyNode.type == AT_KEY ? m_rmapKey : m_rmapMouse;
@@ -824,10 +832,12 @@ bool KeyMap::checkForPressRelease(const QJsonObject &node)
 
 bool KeyMap::checkForMobaWheel(const QJsonObject &node) {
     return checkItemString(node, "key")
-    && checkItemPos(node, "centerPos")
-    && checkItemDouble(node, "speedRatio")
-    && checkItemPos(node,"wheelPos")
-    && checkItemDouble(node,"skillOffset");
+           && checkItemPos(node, "centerPos")
+           && checkItemDouble(node, "speedRatio")
+           && checkItemPos(node, "wheelPos")
+           && checkItemDouble(node, "skillOffset")
+           && checkItemString(node, "skillCancelKey")
+           && checkItemPos(node,"skillCancelPos");
 }
 
 void KeyMap::setMobaWheelMapNode(KeyMapNode &keyMapNode, const QJsonObject &node, const KeyMapType &type) {
@@ -840,13 +850,25 @@ void KeyMap::setMobaWheelMapNode(KeyMapNode &keyMapNode, const QJsonObject &node
         qWarning() << "json error: keyMapNodes node invalid key: " << node.value("key").toString();
         return;
     }
+    QPair<ActionType, int> skillCancelKey = getItemKey(node, "skillCancelKey");
+    if (skillCancelKey.first == AT_INVALID) {
+        qWarning() << "json error: keyMapNodes node invalid skillCancelKey: " << node.value("skillCancelKey").toString();
+        return;
+    }
+
     keyMapNode.type = type;
     keyMapNode.data.mobaWheel.keyNode.type = key.first;
     keyMapNode.data.mobaWheel.keyNode.key = key.second;
+
+    keyMapNode.data.mobaWheel.cancelSkill.type = skillCancelKey.first;
+    keyMapNode.data.mobaWheel.cancelSkill.key = skillCancelKey.second;
+    keyMapNode.data.mobaWheel.cancelSkill.pos = getItemPos(node, "skillCancelPos");
+
     keyMapNode.data.mobaWheel.centerPos = getItemPos(node, "centerPos");
     keyMapNode.data.mobaWheel.speedRatio = getItemDouble(node, "speedRatio");
     keyMapNode.data.mobaWheel.wheelPos = getItemPos(node, "wheelPos");
     keyMapNode.data.mobaWheel.skillOffset = getItemDouble(node, "skillOffset");
+
     m_isValidMobaWheel = true;
 }
 
