@@ -35,6 +35,7 @@ private:
     bool m_hideMouseCursor = false;
     QSize m_frameSize;
     QSize m_showSize;
+    QElapsedTimer elapsedTimer;
 
 public:
     Mouse(QObject *parent, qsc::DeviceParams params);

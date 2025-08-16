@@ -47,8 +47,27 @@ void InputConvertGame::rawMouseEvent(int dx, int dy, DWORD buttons) {
         return;
     }
 
+    int time = m_ctrlMouseMove.elapsedTimer.elapsed();
+
+    if (time < 2) {
+        m_ctrlMouseMove.dx += dx;
+        m_ctrlMouseMove.dy += dy;
+        return;
+    }
+
+    m_ctrlMouseMove.elapsedTimer.restart();
+
+    dx += m_ctrlMouseMove.dx;
+    dy += m_ctrlMouseMove.dy;
+    m_ctrlMouseMove.dx = 0;
+    m_ctrlMouseMove.dy = 0;
+
     if (dx==0 && dy==0) {
         return;
+    }
+
+    if (dx >= 200) {
+        qDebug() << "dx too large :" << dx;
     }
 
     mouseMoveStartTouch(*new QPointF);
@@ -92,6 +111,7 @@ void InputConvertGame::rawMouseEvent(int dx, int dy, DWORD buttons) {
         if (currentConvertPos.x()==0||currentConvertPos.x()==1) {
             qDebug() << "out of pad boundary pos:" << currentConvertPos;
         }
+
         mouseMove(currentConvertPos);
         mouseMoveStopTouch(true);
         mouseMoveStartTouch(*new QPointF);
@@ -551,7 +571,7 @@ InputConvertGame::getCurvedDelayQueue(const QPointF &start, const QPointF &end, 
     timeline.setEasingCurve(QEasingCurve::InOutQuad); // 模拟加速度
 
 // 垂直偏移量（曲率控制因子）
-    double offset = QLineF(start, end).length() * generateDouble(0.05, 0.2);
+    double offset = QLineF(start, end).length() * generateDouble(0.05, 0.1);
 
 // 计算起点到终点的方向向量
     double dx = end.x() - start.x();
@@ -743,7 +763,7 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
         if(!keyPress) return;
         if (!m_ctrlSteerWheel.pressedUp) {
             m_ctrlSteerWheel.pressedBoost = true;
-            qDebug() << "boost key pressed, but no up key pressed";
+//            qDebug() << "boost key pressed, but no up key pressed";
             return;
         }
         m_ctrlSteerWheel.pressedBoost = !m_ctrlSteerWheel.pressedBoost;
@@ -798,7 +818,7 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
         double distance = calcDistance(m_ctrlSteerWheel.delayData.currentPos, m_ctrlSteerWheel.centerPos);
 //        qDebug() << "distance:" << distance;
         if (distance >= node.data.steerWheel.up.extendOffset) {
-            qDebug() << "steer move center";
+//            qDebug() << "steer move center";
             updatePosition(m_ctrlSteerWheel.centerPos);
             m_ctrlSteerWheel.delayData.path = generateBezierPath();
             getDelayQueue(
@@ -1643,10 +1663,10 @@ void InputConvertGame::moveCursorTo(const QMouseEvent *from, const QPoint &local
 bool InputConvertGame::mouseMoveStartTouch(const QPointF pos)
 {
     if (!m_ctrlMouseMove.touching && !m_pointerMode) {
-        if (!m_ctrlMouseMove.mouseMutex.try_lock()) {
-            qDebug() << "abandon multi thread:touch";
-            return true;
-        }
+//        if (!m_ctrlMouseMove.mouseMutex.try_lock()) {
+//            qDebug() << "abandon multi thread:touch";
+//            return true;
+//        }
         m_ctrlMouseMove.touching = true;
         QPointF mouseMoveStartPos;
         if (pos.isNull()) {
@@ -1661,7 +1681,7 @@ bool InputConvertGame::mouseMoveStartTouch(const QPointF pos)
         m_ctrlMouseMove.lastConvertPos = mouseMoveStartPos;
         sendTouchDownEvent(id, mouseMoveStartPos);
 //        qDebug() << "mouse move start touch id:" << id;
-        m_ctrlMouseMove.mouseMutex.unlock();
+//        m_ctrlMouseMove.mouseMutex.unlock();
         return true;
     }
     return false;
@@ -1669,16 +1689,16 @@ bool InputConvertGame::mouseMoveStartTouch(const QPointF pos)
 
 void InputConvertGame::mouseMoveStopTouch(bool delay)
 {
-    m_ctrlMouseMove.mouseMutex.lock();
+//    m_ctrlMouseMove.mouseMutex.lock();
     if (!m_ctrlMouseMove.touching) {
         qDebug() << "mouse move stop concurrent: no touching";
-        m_ctrlMouseMove.mouseMutex.unlock();
+//        m_ctrlMouseMove.mouseMutex.unlock();
         return;
     }
     
     int id = getTouchID(Qt::ExtraButton24);
     if (id < 0) {
-        m_ctrlMouseMove.mouseMutex.unlock();
+//        m_ctrlMouseMove.mouseMutex.unlock();
         return;
     }
     
@@ -1695,7 +1715,7 @@ void InputConvertGame::mouseMoveStopTouch(bool delay)
         sendTouchUpEvent(id, touchUpPos);
     }
 //    qDebug()<< "mouse move stop touch id:" << id;
-    m_ctrlMouseMove.mouseMutex.unlock();
+//    m_ctrlMouseMove.mouseMutex.unlock();
 }
 
 

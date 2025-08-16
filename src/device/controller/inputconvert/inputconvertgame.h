@@ -181,6 +181,9 @@ private:
     // mouse move
     struct
     {
+        QElapsedTimer elapsedTimer;
+        int dx;
+        int dy;
         QPointF startPos;
         QPointF lastConvertPos;
         QPointF cursorPos;

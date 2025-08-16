@@ -598,8 +598,9 @@ void Device::mouseEvent(const QMouseEvent *from, const QSize &frameSize, const Q
         return;
     }
 
-    emit onMouseEvent(from, frameSize, showSize);
     m_controller->mouseEvent(from, frameSize, showSize);
+    emit onMouseEvent(from, frameSize, showSize);
+
     for (const auto& item : m_deviceObservers) {
         item->mouseEvent(from, frameSize, showSize);
     }

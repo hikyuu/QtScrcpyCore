@@ -64,6 +64,15 @@ void Mouse::onMouseEvent(const QMouseEvent *from, const QSize &frameSize, const 
     if (m_hideMouseCursor) {
         return;
     }
+
+    int time = elapsedTimer.elapsed();
+
+    if (time < 6) {
+        return;
+    }
+
+    elapsedTimer.restart();
+
     if (m_showSize != showSize) {
         m_frameSize = frameSize;
         m_showSize = showSize;
