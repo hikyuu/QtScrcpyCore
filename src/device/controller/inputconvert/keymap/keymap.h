@@ -124,7 +124,6 @@ public:
             {
                 QPointF startPos = { 0.0, 0.0 };
                 QPointF speedRatio = { 1.0, 1.0 };
-                KeyNode smallEyes;
             } mouseMove;
             struct
             {

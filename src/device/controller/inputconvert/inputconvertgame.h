@@ -105,9 +105,6 @@ signals:
 
     void mouseCursorHided(bool hide);
 
-protected:
-    void timerEvent(QTimerEvent *event);
-
 private slots:
 
     void onSteerWheelTimer();
@@ -195,8 +192,8 @@ private:
         double leftBoundary = 0.3;
         double topBoundary = 0.1;
         double maxBoundary = 0.9;
-        int timer = 0;
         QTimer resetMoveTimer;
+        QTimer compensateTimer;
         int resetMoveDelay = 100;
         bool needResetTouch = true;
         bool smallEyes = false;
@@ -307,6 +304,10 @@ private:
     static QPainterPath generateLinePath(QPointF start, QPointF end);
 
     static QPointF pointAtPercent(const QPointF &start, const QPointF &end, double percent);
+
+    void mouseMove(int dx, int dy);
+
+    void onCompensateTimer();
 };
 
 #endif // INPUTCONVERTGAME_H

@@ -67,7 +67,7 @@ void Mouse::onMouseEvent(const QMouseEvent *from, const QSize &frameSize, const 
 
     int time = elapsedTimer.elapsed();
 
-    if (time < 6) {
+    if (time < 8 && time > 0) {
         return;
     }
 
