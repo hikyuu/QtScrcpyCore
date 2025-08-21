@@ -3,18 +3,15 @@
 #include <QGuiApplication>
 #include <QRandomGenerator>
 #include <QTimer>
-
-#include "inputconvertgame.h"
 #include <QHash>
 #include <QLine>
-#include <Windows.h>
 #include <xlocale>
-#include <QApplicationStateChangeEvent>
 #include <QtMath>
+#include <QApplicationStateChangeEvent>
 #include <QTimeLine>
+#include <Windows.h>
 
-#define CURSOR_POS_CHECK_WIDTH 250
-#define CURSOR_POS_CHECK_HEIGHT 150
+#include "inputconvertgame.h"
 
 
 InputConvertGame::InputConvertGame(Controller *controller) : InputConvertNormal(controller)
@@ -53,11 +50,10 @@ void InputConvertGame::rawMouseEvent(int dx, int dy, DWORD buttons) {
     }
 
     int time = m_ctrlMouseMove.elapsedTimer.elapsed();
-
-    if (time < 4) {
+    if (time < 3) {
         m_ctrlMouseMove.dx += dx;
         m_ctrlMouseMove.dy += dy;
-        m_ctrlMouseMove.compensateTimer.start(6 - time);
+        m_ctrlMouseMove.compensateTimer.start(5 - time);
         return;
     }
 
@@ -73,7 +69,12 @@ void InputConvertGame::onCompensateTimer() {
 }
 
 void InputConvertGame::mouseMove(int dx, int dy) {
-
+//    m_count++;
+//    if (m_elapsedTimer.elapsed() >= 1000) {
+//        qDebug() << "mouse movements per second:" << m_count;
+//        m_count = 0;
+//        m_elapsedTimer.restart();
+//    }
     m_ctrlMouseMove.elapsedTimer.restart();
 
     dx += m_ctrlMouseMove.dx;
@@ -103,27 +104,25 @@ void InputConvertGame::mouseMove(int dx, int dy) {
             currentConvertPos.setX(0);
             boundary = true;
         } else if (currentConvertPos.x()>= 1) {
-            currentConvertPos.setX(1);
+            currentConvertPos.setX(0.99);
             boundary = true;
         }
         if (currentConvertPos.y() <= 0) {
             currentConvertPos.setY(0);
             boundary = true;
         }else if (currentConvertPos.y() >= 1) {
-            currentConvertPos.setY(1);
+            currentConvertPos.setY(0.99);
             boundary = true;
         }
-        if (boundary) {
-            mouseMove(currentConvertPos);
-            return;
-        }
+        mouseMove(currentConvertPos);
+        return;
     }
 
     if (checkBoundary(currentConvertPos)) {
 //        qDebug() << "over the boundary";
-        if (currentConvertPos.x()>= 1) currentConvertPos.setX(1);
+        if (currentConvertPos.x()>= 1) currentConvertPos.setX(0.99);
         else if (currentConvertPos.x() <= 0) currentConvertPos.setX(0);
-        if (currentConvertPos.y() >= 1) currentConvertPos.setY(1);
+        if (currentConvertPos.y() >= 1) currentConvertPos.setY(0.99);
         else if (currentConvertPos.y() <= 0) currentConvertPos.setY(0);
 
         if (currentConvertPos.x()==0||currentConvertPos.x()==1) {
@@ -155,6 +154,26 @@ void InputConvertGame::activated(bool isActive)
         }
     }
     InputConvertNormal::activated(isActive);
+}
+
+void InputConvertGame::keyboard(void *pVoid)
+{
+    if (m_maskWidget.isNull()) {
+        QObject* pObject = static_cast<QObject*>(pVoid);
+        QWidget* pWidget = qobject_cast<QWidget*>(pObject);
+        if (!pWidget) {
+            qDebug() << "窗口获取失败";
+            return;
+        }
+        m_maskWidget = new MaskWidget(pWidget, &m_keyMap);
+        m_maskWidget->setGeometry(pWidget->rect());
+    }
+    if (m_maskWidget->isVisible()) {
+        m_maskWidget->hide();
+    } else {
+        m_maskWidget->show();
+        m_maskWidget->updateMask();
+    }
 }
 
 void InputConvertGame::mouseEvent(const QMouseEvent *from, const QSize &frameSize, const QSize &showSize)
@@ -358,11 +377,11 @@ void InputConvertGame::processType(KeyMap::KeyMapNode node, const QKeyEvent *fro
     // 处理普通按键
     case KeyMap::KMT_CLICK:
         processKeyClick(false, node, from);
-        processAndroidKey(node.data.click.keyNode.androidKey, from);
+            processAndroidKey(node.data.click.keyNode.androidKey, from->type());
         break;
     case KeyMap::KMT_CLICK_TWICE:
         processKeyClick(true, node, from);
-        processAndroidKey(node.data.clickTwice.keyNode.androidKey, from);
+            processAndroidKey(node.data.clickTwice.keyNode.androidKey, from->type());
         break;
     case KeyMap::KMT_CLICK_MULTI:
         processKeyClickMulti(
@@ -375,7 +394,7 @@ void InputConvertGame::processType(KeyMap::KeyMapNode node, const QKeyEvent *fro
         processKeyDrag(node.data.drag.keyNode.pos, node.data.drag.keyNode.extendPos, from);
         break;
     case KeyMap::KMT_ANDROID_KEY:
-        processAndroidKey(node.data.androidKey.keyNode.androidKey, from);
+        processAndroidKey(node.data.androidKey.keyNode.androidKey, from->type());
         break;
     case KeyMap::KMT_ROTARY_TABLE:
         processRotaryTable(node, from);
@@ -406,6 +425,10 @@ void InputConvertGame::processType(KeyMap::KeyMapNode node, const QKeyEvent *fro
 bool InputConvertGame::isCurrentCustomKeymap()
 {
     return m_gameMap;
+}
+
+QPointer<KeyMap> InputConvertGame::getKeyMap() {
+    return &m_keyMap;
 }
 
 void InputConvertGame::loadKeyMap(const QString &json)
@@ -1258,13 +1281,13 @@ void InputConvertGame::dragStop() {
     }
 }
 
-void InputConvertGame::processAndroidKey(AndroidKeycode androidKey, const QEvent *from)
+void InputConvertGame::processAndroidKey(AndroidKeycode androidKey, QEvent::Type type)
 {
     if (AKEYCODE_UNKNOWN == androidKey) {
         return;
     }
     AndroidKeyeventAction action;
-    switch (from->type()) {
+    switch (type) {
     case QEvent::MouseButtonPress:
     case QEvent::MouseButtonDblClick:
     case QEvent::KeyPress:
@@ -1322,7 +1345,7 @@ bool InputConvertGame::processMouseClick(const QMouseEvent *from) {
         }
         return true;
     case KeyMap::KMT_ANDROID_KEY:
-        processAndroidKey(node.data.androidKey.keyNode.androidKey, from);
+        processAndroidKey(node.data.androidKey.keyNode.androidKey, from->type());
         return true;
     case KeyMap::KMT_CLICK_MULTI: {
         if (QEvent::MouseButtonPress != from->type()) {
@@ -1443,6 +1466,11 @@ bool InputConvertGame::processCustomMouseClick(const QMouseEvent *from) {
                 m_dragDelayData.timer->start(0);
             } else {
                 qDebug() << "right button click";
+                processAndroidKey(AKEYCODE_BACK, QEvent::KeyPress);
+                int delay = QRandomGenerator::global()->bounded(30, 50);
+                QTimer::singleShot(delay, this, [this]() {
+                    processAndroidKey(AKEYCODE_BACK, QEvent::KeyRelease);
+                });
             }
         }
     }
@@ -2160,15 +2188,15 @@ const KeyMap::KeyMapNode InputConvertGame::getNode(const QKeyEvent *from) {
         return m_keyMap.getKeyMapNodeKey(from->key());
     }
     if (from->modifiers() & Qt::ControlModifier) {
-        KeyMap::KeyMapNode node = m_keyMap.getKeyMapNodeKey(from->key() + Qt::Key_Control);
+        KeyMap::KeyMapNode node = m_keyMap.getKeyMapNodeKey(from->key() + Qt::ControlModifier);
         if (node.type != -1) { return node; }
     }
     if (from->modifiers() & Qt::ShiftModifier) {
-        KeyMap::KeyMapNode node = m_keyMap.getKeyMapNodeKey(from->key() + Qt::Key_Shift);
+        KeyMap::KeyMapNode node = m_keyMap.getKeyMapNodeKey(from->key() + Qt::ShiftModifier);
         if (node.type != -1) { return node; }
     }
     if (from->modifiers() & Qt::AltModifier) {
-        KeyMap::KeyMapNode node = m_keyMap.getKeyMapNodeKey(from->key() + Qt::Key_Alt);
+        KeyMap::KeyMapNode node = m_keyMap.getKeyMapNodeKey(from->key() + Qt::AltModifier);
         if (node.type != -1) { return node; }
     }
     return m_keyMap.getKeyMapNodeKey(from->key());

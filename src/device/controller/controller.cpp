@@ -55,7 +55,6 @@ void Controller::updateScript(QString gameScript)
         connect(convertGame, &InputConvertGame::mouseCursorHided, this, [this](bool hide) {
             emit mouseCursorHided(hide);
         });
-
     } else {
         m_inputConvert = new InputConvertNormal(this);
     }
@@ -70,6 +69,14 @@ bool Controller::isCurrentCustomKeymap()
     }
 
     return m_inputConvert->isCurrentCustomKeymap();
+}
+
+void Controller::keyboard(void *pVoid)
+{
+    if (!m_inputConvert) {
+        return;
+    }
+    m_inputConvert->keyboard(pVoid);
 }
 
 void Controller::postBackOrScreenOn(bool down)

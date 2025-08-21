@@ -131,6 +131,7 @@ public:
 
     virtual void screenshot() = 0;
     virtual void showTouch(bool show) = 0;
+    virtual void keyboard(void *pVoid) = 0;
 
     virtual bool isReversePort(quint16 port) = 0;
     virtual const QString &getSerial() = 0;

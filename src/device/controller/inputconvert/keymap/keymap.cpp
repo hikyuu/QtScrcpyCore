@@ -2,19 +2,11 @@
 #include <QCoreApplication>
 #include <QDataStream>
 #include <QDebug>
-#include <QFile>
-#include <QFileInfo>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QMap>
-#include <QMapData>
-#include <QMapDataBase>
-#include <QMapIterator>
-#include <QMapNode>
-#include <QMapNodeBase>
+
 #include <QMetaEnum>
-#include <QMultiMap>
-#include <QMutableMapIterator>
 
 #include "keymap.h"
 
@@ -448,7 +440,33 @@ void KeyMap::setClickMapNode(KeyMapNode &keyMapNode, const QJsonObject &node, co
     }
     keyMapNode.type = type;
     keyMapNode.data.click.keyNode.type = key.first;
-    setModifierKey(node, keyMapNode,key);
+    keyMapNode.data.click.keyNode.key = key.second;
+    if (checkItemString(node, "modifier")) {
+
+        const QPair<ActionType, int> modifierKey = getItemKey(node, "modifier");
+        int modifier;
+        switch (modifierKey.second) {
+            case Qt::Key_Shift:
+                modifier = Qt::ShiftModifier;
+                break;
+            case Qt::Key_Control:
+                modifier = Qt::ControlModifier;
+                break;
+            case Qt::Key_Alt:
+                modifier = Qt::AltModifier;
+                break;
+            default:
+                qWarning() << "json error: key:" << QKeySequence(key.second).toString()
+                           << "modifier invalid:" << QKeySequence(modifierKey.second).toString();
+                return;
+        }
+
+        qDebug() << "key:" << QKeySequence(key.second).toString() << "modifier:" << QKeySequence(modifierKey.second).toString();
+
+        keyMapNode.data.click.keyNode.key += modifier;
+        keyMapNode.data.click.keyNode.modifier = modifier;
+    }
+
     keyMapNode.data.click.keyNode.pos = getItemPos(node, "pos");
     keyMapNode.data.click.keyNode.androidKey = static_cast<AndroidKeycode>(static_cast<int>(getItemDouble(node, "androidKey")));
     setCommonProperties(node, keyMapNode);
@@ -920,16 +938,13 @@ bool KeyMap::getCustomMouseClick() const {
     return m_customMouseClick;
 }
 
-void KeyMap::setModifierKey(const QJsonObject &node, KeyMap::KeyMapNode &keyMapNode, QPair<ActionType, int> key) {
-    keyMapNode.data.click.keyNode.key = key.second;
-    if (!checkItemString(node, "modifier")) return;
-    const QPair<ActionType, int> modifierKey = getItemKey(node, "modifier");
-    if (modifierKey.second != Qt::Key_Control &&
-        modifierKey.second != Qt::Key_Shift &&
-        modifierKey.second != Qt::Key_Alt) {
-        qWarning() << "json error: key:"<<key.second<<"modifier invalid:"<<modifierKey.second;
-        return;
+QList<KeyMap::KeyMapNode> KeyMap::getKeyMapNodeByType(KeyMapType type){
+    QList<KeyMap::KeyMapNode> filtered;
+    for (KeyMap::KeyMapNode x : m_keyMapNodes) {
+        if (x.type == KeyMapType::KMT_CLICK) {
+            filtered.append(x);
+        }
     }
-    qDebug() << "key:" << key.second << "modifier:" << modifierKey.second;
-    keyMapNode.data.click.keyNode.key += modifierKey.second;
+    return filtered;
 }
+

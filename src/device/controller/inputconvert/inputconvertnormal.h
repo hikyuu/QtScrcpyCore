@@ -9,12 +9,13 @@ class InputConvertNormal : public InputConvertBase
 public:
     InputConvertNormal(Controller *controller);
     virtual ~InputConvertNormal();
-    virtual void activated(bool isActive);
     virtual void mouseEvent(const QMouseEvent *from, const QSize &frameSize, const QSize &showSize);
     virtual void wheelEvent(const QWheelEvent *from, const QSize &frameSize, const QSize &showSize);
     virtual void keyEvent(const QKeyEvent *from, const QSize &frameSize, const QSize &showSize);
-    virtual void rawMouseEvent(int dx, int dy, DWORD buttons);
 
+    virtual void rawMouseEvent(int dx, int dy, DWORD buttons);
+    void activated(bool isActive);
+    void keyboard(void *pVoid);
 private:
     AndroidMotioneventButtons convertMouseButtons(Qt::MouseButtons buttonState);
     AndroidMotioneventButtons convertMouseButton(Qt::MouseButton button);

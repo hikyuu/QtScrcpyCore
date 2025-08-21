@@ -1,4 +1,4 @@
-#ifndef KEYMAP_H
+﻿#ifndef KEYMAP_H
 #define KEYMAP_H
 #include <QJsonObject>
 #include <QMetaEnum>
@@ -180,6 +180,9 @@ public:
     const KeyMap::KeyMapNode &getKeyMapNode(int key);
     KeyMapNode getKeyMapNodeKey(int key);
     const KeyMap::KeyMapNode &getKeyMapNodeMouse(int key);
+
+    QList<KeyMap::KeyMapNode> getKeyMapNodeByType(KeyMapType type);
+
     bool isSwitchOnKeyboard();
     int getSwitchKey();
 
@@ -225,32 +228,6 @@ private:
     void setSteerWheelSwitchMode(const QJsonObject &node, KeyMap::KeyMapNode &keyMapNode);
 
     void setClickMapNode(KeyMapNode &keyMapNode, const QJsonObject &node, const KeyMapType &type, const QString &dualMode);
-
-private:
-    static QString s_keyMapPath;
-
-    QVector<KeyMapNode> m_keyMapNodes;
-    KeyNode m_switchKey = { AT_KEY, Qt::Key_QuoteLeft };
-    bool m_customMouseClick = false;
-    // just for return
-    KeyMapNode m_invalidNode;
-
-    // steer wheel index
-    int m_idxSteerWheel = -1;
-
-    // moba wheel index
-    bool m_isValidMobaWheel = false;
-
-    // mouse move index
-    int m_idxMouseMove = -1;
-
-    // mapping of key/mouse event name to index
-    QMetaEnum m_metaEnumKey = QMetaEnum::fromType<Qt::Key>();
-    QMetaEnum m_metaEnumMouseButtons = QMetaEnum::fromType<Qt::MouseButtons>();
-    QMetaEnum m_metaEnumKeyMapType = QMetaEnum::fromType<KeyMap::KeyMapType>();
-    // reverse map of key/mouse event
-    QMultiHash<int, KeyMapNode *> m_rmapKey;
-    QMultiHash<int, KeyMapNode *> m_rmapMouse;
     void setCommonProperties(const QJsonObject &node, KeyMap::KeyMapNode &keyMapNode);
     void setClickTwiceMapNode(KeyMapNode &keyMapNode, const QJsonObject &node, const KeyMapType &type, const QString &dualMode);
     void setClickMultiMapNode(KeyMapNode &keyMapNode, const QJsonObject &node, const KeyMapType &type, const QString &dualMode);
@@ -281,7 +258,32 @@ private:
     void setBoost(const QJsonObject &node, KeyMapNode &keyMapNode);
 
 
-    void setModifierKey(const QJsonObject &node, KeyMapNode &keyMapNode, QPair<ActionType, int> key);
+private:
+    static QString s_keyMapPath;
+
+    QVector<KeyMapNode> m_keyMapNodes;
+    KeyNode m_switchKey = { AT_KEY, Qt::Key_QuoteLeft };
+    bool m_customMouseClick = false;
+    // just for return
+    KeyMapNode m_invalidNode;
+
+    // steer wheel index
+    int m_idxSteerWheel = -1;
+
+    // moba wheel index
+    bool m_isValidMobaWheel = false;
+
+    // mouse move index
+    int m_idxMouseMove = -1;
+
+    // mapping of key/mouse event name to index
+    QMetaEnum m_metaEnumKey = QMetaEnum::fromType<Qt::Key>();
+    QMetaEnum m_metaEnumMouseButtons = QMetaEnum::fromType<Qt::MouseButtons>();
+    QMetaEnum m_metaEnumKeyMapType = QMetaEnum::fromType<KeyMap::KeyMapType>();
+    // reverse map of key/mouse event
+    QMultiHash<int, KeyMapNode *> m_rmapKey;
+    QMultiHash<int, KeyMapNode *> m_rmapMouse;
+
 };
 
 #endif // KEYMAP_H

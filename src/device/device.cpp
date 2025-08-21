@@ -95,6 +95,13 @@ void Device::updateScript(QString script)
     }
 }
 
+void Device::keyboard(void *pVoid)
+{
+    if (m_controller) {
+        m_controller->keyboard(pVoid);
+    }
+}
+
 void Device::screenshot()
 {
     if (!m_decoder) {

@@ -13,6 +13,7 @@
 
 #include "inputconvertnormal.h"
 #include "keymap.h"
+#include "maskwidget.h"
 
 #define MULTI_TOUCH_MAX_NUM 10
 const int MAX_HISTORY = 3;       // 保留最近3个点
@@ -34,6 +35,8 @@ public:
     virtual bool isCurrentCustomKeymap();
 
     void loadKeyMap(const QString &json);
+
+    virtual QPointer<KeyMap> getKeyMap();
 
 protected:
     void updateSize(const QSize &frameSize, const QSize &showSize);
@@ -73,7 +76,7 @@ protected:
     void processKeyDrag(const QPointF &startPos, QPointF endPos, const QKeyEvent *from);
 
     // android key
-    void processAndroidKey(AndroidKeycode androidKey, const QEvent *from);
+    void processAndroidKey(AndroidKeycode androidKey, QEvent::Type type);
 
     // mouse
     bool processMouseClick(const QMouseEvent *from);
@@ -117,10 +120,12 @@ private slots:
 
 private:
     QElapsedTimer m_elapsedTimer;
+    int m_count;
     QSize m_frameSize;
     QSize m_showSize;
     double m_showSizeRatio;
     bool m_gameMap = false;
+    QPointer<MaskWidget> m_maskWidget;
     bool m_customNormalMouseClick = false;
     //准心模式鼠标移动镜头
     bool m_pointerMode = false;
@@ -300,6 +305,8 @@ private:
     static QPointF generatePos(QPointF pos, double radius, double k);
 
     void activated(bool isActive);
+
+    void keyboard(void *pVoid);
 
     static QPainterPath generateLinePath(QPointF start, QPointF end);
 

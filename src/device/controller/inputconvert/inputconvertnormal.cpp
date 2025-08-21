@@ -55,15 +55,11 @@ void InputConvertNormal::mouseEvent(const QMouseEvent *from, const QSize &frameS
     sendControlMsg(controlMsg);
 }
 
-void InputConvertNormal::rawMouseEvent(int dx, int dy, DWORD buttons)
-{
-    return;
-}
+void InputConvertNormal::rawMouseEvent(int dx, int dy, DWORD buttons) {}
 
-void InputConvertNormal::activated(bool isActive)
-{
-    return;
-}
+void InputConvertNormal::activated(bool isActive) {}
+
+void InputConvertNormal::keyboard(void *pVoid) {}
 
 void InputConvertNormal::wheelEvent(const QWheelEvent *from, const QSize &frameSize, const QSize &showSize)
 {

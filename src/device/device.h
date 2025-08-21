@@ -69,6 +69,8 @@ namespace qsc
         void installApkRequest(const QString &apkFile) override;
 
         void screenshot() override;
+        void keyboard(void *pVoid) override;
+
         void showTouch(bool show) override;
 
         bool isReversePort(quint16 port) override;

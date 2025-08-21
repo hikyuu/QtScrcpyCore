@@ -95,6 +95,8 @@ set(QSC_DEVICE_SOURCES
     src/device/server/videosocket.cpp
     src/device/demuxer/demuxer.h
     src/device/demuxer/demuxer.cpp
+    src/device/controller/inputconvert/maskwidget.h
+    src/device/controller/inputconvert/maskwidget.cpp
 )
 source_group(src/device FILES ${QSC_DEVICE_SOURCES})
 
@@ -102,8 +104,8 @@ source_group(src/device FILES ${QSC_DEVICE_SOURCES})
 set(QSC_DEVICEMANAGE_SOURCES
     src/devicemanage/devicemanage.h
     src/devicemanage/devicemanage.cpp
-        src/device/mouse/mouse.cpp
-        src/device/mouse/mouse.h
+    src/device/mouse/mouse.cpp
+    src/device/mouse/mouse.h
 )
 source_group(src/devicemanage FILES ${QSC_DEVICEMANAGE_SOURCES})
 

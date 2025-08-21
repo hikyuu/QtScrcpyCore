@@ -52,6 +52,7 @@ public:
     void setDeviceClipboard(bool pause = true);
     void clipboardPaste();
     void postTextInput(QString &text);
+    void keyboard(void *pVoid);
 
 signals:
     void grabCursor(bool grab);
