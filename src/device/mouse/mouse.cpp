@@ -27,6 +27,9 @@ void Mouse::onAdbProcessResult(qsc::AdbProcess::ADB_EXEC_RESULT processResult)
         qDebug() << "adb result" << processResult;
         // 初始化TCP套接字
         m_socket = new QTcpSocket();
+
+        m_socket->setSocketOption(QAbstractSocket::LowDelayOption, true);  // 禁用Nagle
+
         connect(m_socket, &QTcpSocket::stateChanged, m_socket, [](QAbstractSocket::SocketState state) { qInfo() << "mouse m_socket state changed:" << state; });
         m_socket->connectToHost(QHostAddress::LocalHost, 9999);
         if (m_socket->waitForConnected()) {
@@ -96,7 +99,6 @@ void Mouse::sendMousePos(QPointF pos, bool gameMap)
     data.push_back('\n');
     // 向服务端发送
     m_socket->write(data);
-    m_socket->flush();
 }
 
 void Mouse::onHideMouseCursor(bool hide)

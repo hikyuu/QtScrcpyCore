@@ -32,7 +32,6 @@ Device::Device(DeviceParams params, QObject *parent) : IDevice(parent), m_params
             if (!m_server || !m_server->getControlSocket()) {
                 return 0;
             }
-
             return m_server->getControlSocket()->write(buffer.data(), buffer.length());
         }, params.gameScript, this);
     }

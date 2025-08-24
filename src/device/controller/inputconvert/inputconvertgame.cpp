@@ -75,6 +75,7 @@ void InputConvertGame::mouseMove(int dx, int dy) {
 //        m_count = 0;
 //        m_elapsedTimer.restart();
 //    }
+
     m_ctrlMouseMove.elapsedTimer.restart();
 
     dx += m_ctrlMouseMove.dx;
@@ -586,9 +587,7 @@ int InputConvertGame::getTouchID(int key) const {
 }
 
 // -------- steer wheel event --------
-
-void
-InputConvertGame::getCurvedDelayQueue(const QPointF &start, const QPointF &end, int stepCount,
+void InputConvertGame::getCurvedDelayQueue(const QPointF &start, const QPointF &end, int stepCount,
                                       QQueue<QPointF> &queuePos, QQueue<quint32> &queueTimer)
 {
     QQueue<QPointF> queue;
@@ -1084,18 +1083,6 @@ QPainterPath InputConvertGame::generateBezierPath() {
 void InputConvertGame::processKeyClick(bool clickTwice, const KeyMap::KeyMapNode &node, const QKeyEvent *from)
 {
     if (QEvent::KeyPress == from->type()) {
-        if (from->key() == Qt::Key_F2) {
-            QList<int> stuckArray;
-            int stuckNumber = 0;
-            for (int i : m_multiTouchID) {
-                if (0 != i) {
-                    stuckNumber++;
-                    stuckArray.append(i);
-                }
-            }
-            qDebug()<<"stuckNumber:"<<stuckNumber <<"exceptionButton:"<< stuckArray;
-        }
-
         QPointF processedPos = generatePos(node.data.click.keyNode.pos, 0.015);
         m_keyPosMap[from->key()] = processedPos;
         int id = attachTouchID(from->key());
