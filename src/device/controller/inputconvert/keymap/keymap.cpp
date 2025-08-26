@@ -342,14 +342,14 @@ void KeyMap::setSteerWheelMapNode(KeyMapNode &keyMapNode, const QJsonObject &nod
 
     if (checkItemBool(node, "simulateWheel")) {
         keyMapNode.data.steerWheel.simulateWheel = getItemBool(node, "simulateWheel");
-    } else {
-        keyMapNode.data.steerWheel.simulateWheel = false;
     }
 
     if (checkItemBool(node, "keepMove")) {
         keyMapNode.data.steerWheel.keepMove = getItemBool(node, "keepMove");
-    } else {
-        keyMapNode.data.steerWheel.keepMove = false;
+    }
+
+    if (checkItemBool(node, "fixedStick")) {
+        keyMapNode.data.steerWheel.fixedStick = getItemBool(node, "fixedStick");
     }
 
     keyMapNode.type = type;
@@ -442,7 +442,6 @@ void KeyMap::setClickMapNode(KeyMapNode &keyMapNode, const QJsonObject &node, co
     keyMapNode.data.click.keyNode.type = key.first;
     keyMapNode.data.click.keyNode.key = key.second;
     if (checkItemString(node, "modifier")) {
-
         const QPair<ActionType, int> modifierKey = getItemKey(node, "modifier");
         int modifier;
         switch (modifierKey.second) {
@@ -466,7 +465,11 @@ void KeyMap::setClickMapNode(KeyMapNode &keyMapNode, const QJsonObject &node, co
         keyMapNode.data.click.keyNode.key += modifier;
         keyMapNode.data.click.keyNode.modifier = modifier;
     }
-
+    if (checkItemDouble(node, "radius")) {
+        keyMapNode.data.click.keyNode.radius = getItemDouble(node, "radius");
+    }else {
+        keyMapNode.data.click.keyNode.radius = 0.015;
+    }
     keyMapNode.data.click.keyNode.pos = getItemPos(node, "pos");
     keyMapNode.data.click.keyNode.androidKey = static_cast<AndroidKeycode>(static_cast<int>(getItemDouble(node, "androidKey")));
     setCommonProperties(node, keyMapNode);

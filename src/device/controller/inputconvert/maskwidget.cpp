@@ -3,13 +3,14 @@
 #include <QPainterPath>
 #include <QPointer>
 #include <QStaticText>
+#include <utility>
 
 #include "keymap.h"
 #include "maskwidget.h"
 
 MaskWidget::MaskWidget(QWidget *parent, QPointer<KeyMap> keyMap) : QWidget(parent)
 {
-    m_keyMap = keyMap;
+    m_keyMap = std::move(keyMap);
     setAttribute(Qt::WA_TransparentForMouseEvents);
     setAttribute(Qt::WA_TranslucentBackground);
 }
@@ -17,7 +18,7 @@ MaskWidget::MaskWidget(QWidget *parent, QPointer<KeyMap> keyMap) : QWidget(paren
 void MaskWidget::updateMask() {}
 
 void MaskWidget::paintEvent(QPaintEvent* event) {
-    qDebug() << "绘制键盘布局";
+//    qDebug() << "绘制键盘布局";
     QPainter painter(this);
     // 半透明背景
     painter.fillRect(rect(), QColor(0, 0, 0, 0));
@@ -27,9 +28,11 @@ void MaskWidget::paintEvent(QPaintEvent* event) {
     for (const auto &item: clickList) {
         // 归一化坐标转实际像素坐标
         QPointF pos = item.data.click.keyNode.pos;
-        double x = pos.x() * width();
-        double y = pos.y() * height();
-        int radius = 0.015 * qMin(width(), height());
+
+        int x = qRound(pos.x() * width());
+        int y = qRound(pos.y() * height());
+        int radius = qRound(item.data.click.keyNode.radius * qMax(width(), height()));
+//        qDebug() << item.data.click.keyNode.key << "半径：" << radius;
 
         // 设置半透明画刷
         painter.setBrush(QBrush(QColor(0,0,0,100))); // 黑色半透明

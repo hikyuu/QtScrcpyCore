@@ -734,6 +734,7 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
     bool boostKey = key == node.data.steerWheel.boost.key;
     m_ctrlSteerWheel.simulateWheel = node.data.steerWheel.simulateWheel;
     m_ctrlSteerWheel.keepMove = node.data.steerWheel.keepMove;
+    m_ctrlSteerWheel.fixedStick = node.data.steerWheel.fixedStick;
     if (keyPress && key == node.data.steerWheel.switchKey.key) {
         m_ctrlSteerWheel.clickMode = !m_ctrlSteerWheel.clickMode;
         return;
@@ -856,7 +857,6 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
             return;
         }
 
-//        QMutexLocker locker(&m_ctrlSteerWheel.steerMutex);
         if (!m_ctrlSteerWheel.wheeling) {
             return;
         }
@@ -890,13 +890,10 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
         int id = attachTouchID(m_ctrlSteerWheel.touchKey);
 
         QPointF centerPos = node.data.steerWheel.centerPos;
-        if (node.data.steerWheel.simulateWheel) {
+        if (m_ctrlSteerWheel.simulateWheel && !m_ctrlSteerWheel.fixedStick) {
             centerPos = generatePos(node.data.steerWheel.centerPos, 0.025, 3);
         }
         m_ctrlSteerWheel.centerPos = centerPos;
-        sendTouchDownEvent(id, centerPos);
-        m_ctrlSteerWheel.delayData.historyPoints.clear();
-        m_ctrlSteerWheel.delayData.historyPoints.append(centerPos);
 
         QPointF endPos = centerPos + offset;
 
@@ -904,11 +901,23 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
             double distance = calcDistance(centerPos, endPos);
             endPos = generatePos(endPos, distance * 0.05, 2);
         }
+
+        m_ctrlSteerWheel.delayData.historyPoints.clear();
+        m_ctrlSteerWheel.delayData.historyPoints.append(centerPos);
         updatePosition(endPos);
-        m_ctrlSteerWheel.delayData.path = generateBezierPath();
-        getDelayQueue(
-                m_ctrlSteerWheel.delayData.queuePos,
-                m_ctrlSteerWheel.delayData.queueTimer, false, 8, 0, 15, m_ctrlSteerWheel.delayData.path);
+
+        if (!m_ctrlSteerWheel.fixedStick) {
+            sendTouchDownEvent(id, centerPos);
+            m_ctrlSteerWheel.delayData.currentPos = centerPos;
+            m_ctrlSteerWheel.delayData.path = generateBezierPath();
+            getDelayQueue(
+                    m_ctrlSteerWheel.delayData.queuePos,
+                    m_ctrlSteerWheel.delayData.queueTimer, false, 8, 0, 15, m_ctrlSteerWheel.delayData.path);
+        } else {
+            sendTouchDownEvent(id, endPos);
+            m_ctrlSteerWheel.delayData.currentPos = endPos;
+        }
+
     } else {
         if (!m_ctrlSteerWheel.wheeling) return;
         bool slowEnd = true;
@@ -1083,7 +1092,7 @@ QPainterPath InputConvertGame::generateBezierPath() {
 void InputConvertGame::processKeyClick(bool clickTwice, const KeyMap::KeyMapNode &node, const QKeyEvent *from)
 {
     if (QEvent::KeyPress == from->type()) {
-        QPointF processedPos = generatePos(node.data.click.keyNode.pos, 0.015);
+        QPointF processedPos = generatePos(node.data.click.keyNode.pos, node.data.click.keyNode.radius);
         m_keyPosMap[from->key()] = processedPos;
         int id = attachTouchID(from->key());
         sendTouchDownEvent(id, processedPos);
@@ -1315,9 +1324,8 @@ bool InputConvertGame::processMouseClick(const QMouseEvent *from) {
         }
         if (QEvent::MouseButtonPress == from->type() || QEvent::MouseButtonDblClick == from->type()) {
             int id = attachTouchID(from->button());
-            m_keyPosMap[from->button()] = generatePos(node.data.click.keyNode.pos, 0.01);
+            m_keyPosMap[from->button()] = generatePos(node.data.click.keyNode.pos, node.data.click.keyNode.radius);
             sendTouchDownEvent(id, m_keyPosMap[from->button()]);
-
             return true;
         }
         if (QEvent::MouseButtonRelease == from->type()) {
@@ -1346,7 +1354,7 @@ bool InputConvertGame::processMouseClick(const QMouseEvent *from) {
         for (int i = 0; i < count; i++) {
             delay += QRandomGenerator::global()->bounded(nodes[i].delay, nodes[i].delay + 10);
             delay += nodes[i].delay;
-            clickPos = generatePos(nodes[i].pos, 0.01);
+            clickPos = generatePos(nodes[i].pos, 0.02);
             QTimer::singleShot(delay, this, [this, button, clickPos]() {
                 int id = attachTouchID(button);
                 sendTouchDownEvent(id, clickPos);
@@ -1839,7 +1847,7 @@ void InputConvertGame::processRotaryTable(const KeyMap::KeyMapNode &node, const 
     if (m_keyMap.isValidMouseMoveMap()) {
         if (QEvent::KeyPress == from->type()) {
             int delay = node.data.rotaryTable.delay;
-            QPointF pos = generatePos(node.data.rotaryTable.keyNode.pos, 0.025);
+            QPointF pos = generatePos(node.data.rotaryTable.keyNode.pos, 0.015);
             m_keyPosMap[key] = pos;
             int id = attachTouchID(key);
             sendTouchDownEvent(id, pos);

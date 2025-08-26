@@ -66,21 +66,23 @@ public:
         QPointF pos = QPointF(0, 0);                           // normal key
         QPointF extendPos = QPointF(0, 0);                     // for drag
         double extendOffset = 0.0;                             // for steerWheel
+        double radius = 0.0;                           // for click
         DelayClickNode delayClickNodes[MAX_DELAY_CLICK_NODES]; // for multi clicks
         int delayClickNodesCount = 0;
         AndroidKeycode androidKey = AKEYCODE_UNKNOWN; // for key press
                                                       //        bool repeat = false;
         SecondNode secondNodes[MAX_DELAY_CLICK_NODES];
+
         //        int secondNodesCount = 0;
         KeyNode(
-            ActionType type = AT_INVALID,
-            int key = Qt::Key_unknown,
-            QPointF pos = QPointF(0, 0),
-            QPointF extendPos = QPointF(0, 0),
-            double extendOffset = 0.0,
-            AndroidKeycode androidKey = AKEYCODE_UNKNOWN)
-            : type(type), key(key), pos(pos), extendPos(extendPos), extendOffset(extendOffset), androidKey(androidKey)
-        {
+                ActionType type = AT_INVALID,
+                int key = Qt::Key_unknown,
+                QPointF pos = QPointF(0, 0),
+                QPointF extendPos = QPointF(0, 0),
+                double extendOffset = 0.0,
+                AndroidKeycode androidKey = AKEYCODE_UNKNOWN)
+                : type(type), key(key), pos(pos), extendPos(extendPos), extendOffset(extendOffset),
+                  androidKey(androidKey) {
         }
     };
 
@@ -113,8 +115,9 @@ public:
                 QPointF centerPos = { 0.0, 0.0 };
                 KeyNode left, right, up, down, switchKey;
                 KeyNode boost;
-                bool simulateWheel;
-                bool keepMove;
+                bool simulateWheel = true;
+                bool keepMove = false;
+                bool fixedStick = false;
             } steerWheel;
             struct
             {

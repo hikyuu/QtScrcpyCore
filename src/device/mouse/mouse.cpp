@@ -42,6 +42,7 @@ void Mouse::onAdbProcessResult(qsc::AdbProcess::ADB_EXEC_RESULT processResult)
             // 将数据写入到QTcpSocket对象中
             m_socket->write(bytes);
         }
+        disableTunnelForward();
     }
 }
 
@@ -70,7 +71,7 @@ void Mouse::onMouseEvent(const QMouseEvent *from, const QSize &frameSize, const 
 
     int time = elapsedTimer.elapsed();
 
-    if (time < 8 && time > 0) {
+    if (time < 7) {
         return;
     }
 
@@ -80,6 +81,7 @@ void Mouse::onMouseEvent(const QMouseEvent *from, const QSize &frameSize, const 
         m_frameSize = frameSize;
         m_showSize = showSize;
     }
+
     QPointF pos = from->localPos();
     pos.setX(pos.x() * frameSize.width() / showSize.width());
     pos.setY(pos.y() * frameSize.height() / showSize.height());
@@ -99,6 +101,8 @@ void Mouse::sendMousePos(QPointF pos, bool gameMap)
     data.push_back('\n');
     // 向服务端发送
     m_socket->write(data);
+
+//    qDebug() << "spendTime" << elapsedTimer.nsecsElapsed()/1000;
 }
 
 void Mouse::onHideMouseCursor(bool hide)

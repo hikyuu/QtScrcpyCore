@@ -147,7 +147,8 @@ private:
         bool pressedBoost = false;
         bool clickMode = false;
         bool wheeling = false;
-        bool simulateWheel = false;
+        bool simulateWheel = true;
+        bool fixedStick = false;
         bool keepMove = false;
         QMutex steerMutex;
         QPointF clickPos;
