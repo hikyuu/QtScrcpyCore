@@ -136,7 +136,7 @@ public:
             {
                 KeyNode keyNode;
                 QPointF speedRatio = { 1.0, 1.0 };
-                int delay;
+                int delay = 0;
             } rotaryTable;
             struct
             {

@@ -103,6 +103,7 @@ void KeyMap::loadKeyMap(const QString &json)
 
         qDebug() << "mouseMoveMap loaded, success!";
         m_idxMouseMove = m_keyMapNodes.size();
+        qDebug()<<"重新加载keymap数量" << m_keyMapNodes.size();
         m_keyMapNodes.push_back(keyMapNode);
     }
 
@@ -121,7 +122,7 @@ void KeyMap::loadKeyMap(const QString &json)
                 errorString = QString("json error: keyMapNodes no find node type");
                 goto parseError;
             }
-            KeyMapNode keyMapNode;
+            KeyMapNode keyMapNode{};
             setKeyMapNode(node, keyMapNode, false);
             if (keyMapNode.type != KMT_INVALID) {
                 m_keyMapNodes.push_back(keyMapNode);
@@ -247,6 +248,7 @@ void KeyMap::setRotaryTableMapNode(KeyMapNode &keyMapNode, const QJsonObject &no
         return;
     }
     keyMapNode.type = type;
+
     if (checkItemDouble(node, "speedRatio")) {
         float ratio = static_cast<float>(getItemDouble(node, "speedRatio"));
         keyMapNode.data.rotaryTable.speedRatio.setX(ratio);
@@ -255,15 +257,22 @@ void KeyMap::setRotaryTableMapNode(KeyMapNode &keyMapNode, const QJsonObject &no
         keyMapNode.data.rotaryTable.speedRatio.setX(1.0f);
         keyMapNode.data.rotaryTable.speedRatio.setY(1.0f);
     }
+
+    keyMapNode.data.rotaryTable.delay = 0;
     if (checkItemDouble(node, "delay")) {
-        float delay = getItemDouble(node, "delay");
+        int delay = static_cast<int>(getItemDouble(node, "delay"));
         keyMapNode.data.rotaryTable.delay = delay;
-    } else {
-        keyMapNode.data.rotaryTable.delay = 0;
     }
+
     keyMapNode.data.rotaryTable.keyNode.type = key.first;
     keyMapNode.data.rotaryTable.keyNode.key = key.second;
     keyMapNode.data.rotaryTable.keyNode.pos = getItemPos(node, "pos");
+
+    if (checkItemDouble(node, "radius")) {
+        keyMapNode.data.rotaryTable.keyNode.radius = getItemDouble(node, "radius");
+    }else {
+        keyMapNode.data.rotaryTable.keyNode.radius = 0.005;
+    }
 
     keyMapNode.data.rotaryTable.keyNode.androidKey = static_cast<AndroidKeycode>(static_cast<int>(getItemDouble(node, "androidKey")));
     setCommonProperties(node, keyMapNode);
@@ -340,17 +349,8 @@ void KeyMap::setSteerWheelMapNode(KeyMapNode &keyMapNode, const QJsonObject &nod
         return;
     }
 
-    if (checkItemBool(node, "simulateWheel")) {
-        keyMapNode.data.steerWheel.simulateWheel = getItemBool(node, "simulateWheel");
-    }
 
-    if (checkItemBool(node, "keepMove")) {
-        keyMapNode.data.steerWheel.keepMove = getItemBool(node, "keepMove");
-    }
 
-    if (checkItemBool(node, "fixedStick")) {
-        keyMapNode.data.steerWheel.fixedStick = getItemBool(node, "fixedStick");
-    }
 
     keyMapNode.type = type;
     keyMapNode.data.steerWheel.left = { leftKey.first, leftKey.second, QPointF(0, 0), QPointF(0, 0), getItemDouble(node, "leftOffset") };
@@ -359,6 +359,20 @@ void KeyMap::setSteerWheelMapNode(KeyMapNode &keyMapNode, const QJsonObject &nod
     keyMapNode.data.steerWheel.down = { downKey.first, downKey.second, QPointF(0, 0), QPointF(0, 0), getItemDouble(node, "downOffset") };
 
     keyMapNode.data.steerWheel.centerPos = getItemPos(node, "centerPos");
+
+    keyMapNode.data.steerWheel.simulateWheel = true;
+    keyMapNode.data.steerWheel.keepMove = false;
+    keyMapNode.data.steerWheel.fixedStick = false;
+
+    if (checkItemBool(node, "simulateWheel")) {
+        keyMapNode.data.steerWheel.simulateWheel = getItemBool(node, "simulateWheel");
+    }
+    if (checkItemBool(node, "keepMove")) {
+        keyMapNode.data.steerWheel.keepMove = getItemBool(node, "keepMove");
+    }
+    if (checkItemBool(node, "fixedStick")) {
+        keyMapNode.data.steerWheel.fixedStick = getItemBool(node, "fixedStick");
+    }
 
     setSteerWheelSwitchMode(node, keyMapNode);
     setBoost(node, keyMapNode);
@@ -383,6 +397,7 @@ void KeyMap::setClickMultiMapNode(KeyMapNode &keyMapNode, const QJsonObject &nod
         qInfo() << "clickNodes too much, up to " << MAX_DELAY_CLICK_NODES;
         return;
     }
+    keyMapNode.data.clickMulti.pressTime = 0;
     if (checkItemDouble(node, "pressTime")) {
         keyMapNode.data.clickMulti.pressTime = getItemDouble(node,"pressTime");
     }
@@ -943,7 +958,7 @@ bool KeyMap::getCustomMouseClick() const {
 
 QList<KeyMap::KeyMapNode> KeyMap::getKeyMapNodeByType(KeyMapType type){
     QList<KeyMap::KeyMapNode> filtered;
-    for (KeyMap::KeyMapNode x : m_keyMapNodes) {
+    for (const KeyMap::KeyMapNode& x : m_keyMapNodes) {
         if (x.type == KeyMapType::KMT_CLICK) {
             filtered.append(x);
         }

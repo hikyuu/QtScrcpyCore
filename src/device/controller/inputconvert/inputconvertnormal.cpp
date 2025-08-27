@@ -61,6 +61,8 @@ void InputConvertNormal::activated(bool isActive) {}
 
 void InputConvertNormal::keyboard(void *pVoid) {}
 
+void InputConvertNormal::prepareToDelete() {}
+
 void InputConvertNormal::wheelEvent(const QWheelEvent *from, const QSize &frameSize, const QSize &showSize)
 {
     if (!from || from->angleDelta().isNull()) {

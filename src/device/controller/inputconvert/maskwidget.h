@@ -10,7 +10,7 @@
 class MaskWidget : public QWidget {
 Q_OBJECT
 public:
-    MaskWidget(QWidget *parent, QPointer<KeyMap> keyMap);
+    MaskWidget(QWidget *parent, const QPointer<KeyMap> &keyMap);
 
 private:
     void paintEvent(QPaintEvent* event) override;

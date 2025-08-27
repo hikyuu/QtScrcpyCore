@@ -8,14 +8,15 @@ class InputConvertNormal : public InputConvertBase
     Q_OBJECT
 public:
     InputConvertNormal(Controller *controller);
-    virtual ~InputConvertNormal();
-    virtual void mouseEvent(const QMouseEvent *from, const QSize &frameSize, const QSize &showSize);
-    virtual void wheelEvent(const QWheelEvent *from, const QSize &frameSize, const QSize &showSize);
-    virtual void keyEvent(const QKeyEvent *from, const QSize &frameSize, const QSize &showSize);
+    ~InputConvertNormal() override;
+     void mouseEvent(const QMouseEvent *from, const QSize &frameSize, const QSize &showSize) override;
+     void wheelEvent(const QWheelEvent *from, const QSize &frameSize, const QSize &showSize) override;
+     void keyEvent(const QKeyEvent *from, const QSize &frameSize, const QSize &showSize) override;
 
-    virtual void rawMouseEvent(int dx, int dy, DWORD buttons);
-    void activated(bool isActive);
-    void keyboard(void *pVoid);
+     void rawMouseEvent(int dx, int dy, DWORD buttons) override;
+     void activated(bool isActive) override;
+     void keyboard(void *pVoid) override;
+     void prepareToDelete() override;
 private:
     AndroidMotioneventButtons convertMouseButtons(Qt::MouseButtons buttonState);
     AndroidMotioneventButtons convertMouseButton(Qt::MouseButton button);

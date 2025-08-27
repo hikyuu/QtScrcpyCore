@@ -8,8 +8,8 @@
 #include <QWidget>
 #include <QMutex>
 #include <QTimer>
-#include <QElapsedTimer>
 #include <QPainterPath>
+#include <QElapsedTimer>
 
 #include "inputconvertnormal.h"
 #include "keymap.h"
@@ -119,8 +119,9 @@ private slots:
     void onWheelUpTimer();
 
 private:
-    QElapsedTimer m_elapsedTimer;
-    int m_count;
+
+    QTimer *loopTimer = nullptr;
+
     QSize m_frameSize;
     QSize m_showSize;
     double m_showSizeRatio;
@@ -129,7 +130,6 @@ private:
     bool m_customNormalMouseClick = false;
     //准心模式鼠标移动镜头
     bool m_pointerMode = false;
-    QElapsedTimer timer;
     QList<int> m_multiTouchID;
     KeyMap m_keyMap;
     QMap<int, QPointF> m_keyPosMap;
@@ -150,7 +150,6 @@ private:
         bool simulateWheel = true;
         bool fixedStick = false;
         bool keepMove = false;
-        QMutex steerMutex;
         QPointF clickPos;
         QPointF centerPos;
         // for delay
@@ -184,9 +183,8 @@ private:
     // mouse move
     struct
     {
-        QElapsedTimer elapsedTimer;
-        int dx;
-        int dy;
+        int dx = 0;
+        int dy = 0;
         QPointF startPos;
         QPointF lastConvertPos;
         QPointF cursorPos;
@@ -199,7 +197,6 @@ private:
         double topBoundary = 0.1;
         double maxBoundary = 0.9;
         QTimer resetMoveTimer;
-        QTimer compensateTimer;
         int resetMoveDelay = 100;
         bool needResetTouch = true;
         bool smallEyes = false;
@@ -305,9 +302,11 @@ private:
 
     static QPointF generatePos(QPointF pos, double radius, double k);
 
-    void activated(bool isActive);
+    void activated(bool isActive) override;
 
-    void keyboard(void *pVoid);
+    void keyboard(void *pVoid) override;
+
+    void prepareToDelete() override;
 
     static QPainterPath generateLinePath(QPointF start, QPointF end);
 
@@ -315,7 +314,7 @@ private:
 
     void mouseMove(int dx, int dy);
 
-    void onCompensateTimer();
+    void onLoopTimer();
 };
 
 #endif // INPUTCONVERTGAME_H

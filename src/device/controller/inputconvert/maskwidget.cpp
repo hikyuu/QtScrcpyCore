@@ -8,9 +8,9 @@
 #include "keymap.h"
 #include "maskwidget.h"
 
-MaskWidget::MaskWidget(QWidget *parent, QPointer<KeyMap> keyMap) : QWidget(parent)
+MaskWidget::MaskWidget(QWidget *parent, const QPointer<KeyMap> &keyMap) : QWidget(parent)
 {
-    m_keyMap = std::move(keyMap);
+    m_keyMap = keyMap;
     setAttribute(Qt::WA_TransparentForMouseEvents);
     setAttribute(Qt::WA_TranslucentBackground);
 }
@@ -23,7 +23,10 @@ void MaskWidget::paintEvent(QPaintEvent* event) {
     // 半透明背景
     painter.fillRect(rect(), QColor(0, 0, 0, 0));
 
+    if (m_keyMap.isNull()) return; // 关键检查
+
     QList<KeyMap::KeyMapNode> clickList = m_keyMap->getKeyMapNodeByType(KeyMap::KeyMapType::KMT_CLICK);
+    qDebug()<<"绘制按键数量：" << clickList.size();
     painter.setRenderHint(QPainter::Antialiasing); // 抗锯齿
     for (const auto &item: clickList) {
         // 归一化坐标转实际像素坐标

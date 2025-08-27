@@ -46,6 +46,7 @@ void Controller::test(QRect rc)
 void Controller::updateScript(QString gameScript)
 {
     if (m_inputConvert) {
+        m_inputConvert->prepareToDelete();
         delete m_inputConvert;
     }
     if (!gameScript.isEmpty()) {

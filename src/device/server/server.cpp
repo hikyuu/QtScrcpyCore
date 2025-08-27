@@ -33,6 +33,8 @@ Server::Server(QObject *parent) : QObject(parent)
             }
         } else {
             m_controlSocket = tmp;
+            m_controlSocket->setSocketOption(QAbstractSocket::LowDelayOption, true);
+            qDebug() << "控制网络反向连接";
             if (m_controlSocket && m_controlSocket->isValid()) {
                 // we don't need the server m_socket anymore
                 // just m_videoSocket is ok
@@ -403,8 +405,8 @@ void Server::onConnectTimer()
         qWarning("video m_socket connect to server failed");
         goto result;
     }
-    controlSocket->setSocketOption(QAbstractSocket::LowDelayOption, true);  // 禁用Nagle
     controlSocket->connectToHost(QHostAddress::LocalHost, m_params.localPort);
+    qDebug() << "控制网络连接手机";
     if (!controlSocket->waitForConnected(1000)) {
         // 连接到adb很快的，这里失败不重试
         m_connectCount = MAX_CONNECT_COUNT;
@@ -438,6 +440,8 @@ result:
         // devices will send 1 byte first on tunnel forward mode
         controlSocket->read(1);
         m_controlSocket = controlSocket;
+        m_controlSocket->setSocketOption(QAbstractSocket::LowDelayOption, true);  // 禁用Nagle
+
         // we don't need the adb tunnel anymore
         disableTunnelForward();
         m_tunnelEnabled = false;
