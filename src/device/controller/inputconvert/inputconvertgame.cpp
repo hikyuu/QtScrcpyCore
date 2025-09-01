@@ -441,6 +441,9 @@ void InputConvertGame::loadKeyMap(const QString &json)
     if (m_keyMap.isValidMouseMoveMap()) {
         m_currentSpeedRatio = m_keyMap.getMouseMoveMap().data.mouseMove.speedRatio;
         m_customNormalMouseClick = m_keyMap.getCustomMouseClick();
+        m_ctrlSteerWheel.simulateWheel = m_keyMap.getMouseMoveMap().data.steerWheel.simulateWheel;
+        m_ctrlSteerWheel.keepMove = m_keyMap.getMouseMoveMap().data.steerWheel.keepMove;
+        m_ctrlSteerWheel.fixedStick = m_keyMap.getMouseMoveMap().data.steerWheel.fixedStick;
     }
 }
 
@@ -742,13 +745,19 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
     // 是否按下
     bool keyPress = from->type() == QEvent::KeyPress;
     bool boostKey = key == node.data.steerWheel.boost.key;
-    m_ctrlSteerWheel.simulateWheel = node.data.steerWheel.simulateWheel;
-    m_ctrlSteerWheel.keepMove = node.data.steerWheel.keepMove;
-    m_ctrlSteerWheel.fixedStick = node.data.steerWheel.fixedStick;
-    if (keyPress && key == node.data.steerWheel.switchKey.key) {
+
+    if (key == node.data.steerWheel.switchKey.key) {
+        if (!keyPress) return;
         m_ctrlSteerWheel.clickMode = !m_ctrlSteerWheel.clickMode;
         return;
     }
+    if (key == node.data.steerWheel.fixedKey.key) {
+        if (!keyPress) return;
+        m_ctrlSteerWheel.fixedStick = !m_ctrlSteerWheel.fixedStick;
+        qDebug()<< "steer wheel fixed stick:" << m_ctrlSteerWheel.fixedStick;
+        return;
+    }
+
     // identify keys
     if (key == node.data.steerWheel.up.key) {
         m_ctrlSteerWheel.pressedUp = keyPress;
@@ -916,19 +925,12 @@ void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const Q
         m_ctrlSteerWheel.delayData.historyPoints.append(centerPos);
         updatePosition(endPos);
 
-        if (!m_ctrlSteerWheel.fixedStick) {
-            sendTouchDownEvent(id, centerPos);
-            m_ctrlSteerWheel.delayData.currentPos = centerPos;
-            m_ctrlSteerWheel.delayData.path = generateBezierPath();
-            getDelayQueue(
-                    m_ctrlSteerWheel.delayData.queuePos,
-                    m_ctrlSteerWheel.delayData.queueTimer, false, 8, 0, 15, m_ctrlSteerWheel.delayData.path);
-
-        } else {
-            sendTouchDownEvent(id, endPos);
-            m_ctrlSteerWheel.delayData.currentPos = endPos;
-        }
-
+        sendTouchDownEvent(id, centerPos);
+        m_ctrlSteerWheel.delayData.currentPos = centerPos;
+        m_ctrlSteerWheel.delayData.path = generateBezierPath();
+        getDelayQueue(
+                m_ctrlSteerWheel.delayData.queuePos,
+                m_ctrlSteerWheel.delayData.queueTimer, false, 8, 0, 15, m_ctrlSteerWheel.delayData.path);
     } else {
         if (!m_ctrlSteerWheel.wheeling) return;
         bool slowEnd = true;

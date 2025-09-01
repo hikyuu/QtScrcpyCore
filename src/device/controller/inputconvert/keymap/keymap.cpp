@@ -103,7 +103,7 @@ void KeyMap::loadKeyMap(const QString &json)
 
         qDebug() << "mouseMoveMap loaded, success!";
         m_idxMouseMove = m_keyMapNodes.size();
-        qDebug()<<"重新加载keymap数量" << m_keyMapNodes.size();
+//        qDebug()<<"重新加载keymap数量" << m_keyMapNodes.size();
         m_keyMapNodes.push_back(keyMapNode);
     }
 
@@ -363,6 +363,14 @@ void KeyMap::setSteerWheelMapNode(KeyMapNode &keyMapNode, const QJsonObject &nod
     keyMapNode.data.steerWheel.simulateWheel = true;
     keyMapNode.data.steerWheel.keepMove = false;
     keyMapNode.data.steerWheel.fixedStick = false;
+
+    if (checkItemString(node, "fixedKey")) {
+        QPair<ActionType, int> fixedKey = getItemKey(node, "fixedKey");
+        if (fixedKey.first == AT_INVALID) {
+            qWarning() << "json error: keyMapNodes fixedKey invalid: " << node.value("fixedKey").toString();
+        }
+        keyMapNode.data.steerWheel.fixedKey = { fixedKey.first, fixedKey.second };
+    }
 
     if (checkItemBool(node, "simulateWheel")) {
         keyMapNode.data.steerWheel.simulateWheel = getItemBool(node, "simulateWheel");
@@ -657,6 +665,8 @@ void KeyMap::makeReverseMap()
             md.insert(node.data.steerWheel.down.key, &node);
             QMultiHash<int, KeyMapNode *> &mc = node.data.steerWheel.switchKey.type == AT_KEY ? m_rmapKey : m_rmapMouse;
             mc.insert(node.data.steerWheel.switchKey.key, &node);
+            QMultiHash<int, KeyMapNode *> &mf = node.data.steerWheel.fixedKey.type == AT_KEY ? m_rmapKey : m_rmapMouse;
+            mf.insert(node.data.steerWheel.fixedKey.key, &node);
             QMultiHash<int, KeyMapNode *> &mb = node.data.steerWheel.boost.type == AT_KEY ? m_rmapKey : m_rmapMouse;
             mb.insert(node.data.steerWheel.boost.key, &node);
         } break;

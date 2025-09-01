@@ -113,7 +113,7 @@ public:
             struct
             {
                 QPointF centerPos = { 0.0, 0.0 };
-                KeyNode left, right, up, down, switchKey;
+                KeyNode left, right, up, down, switchKey,fixedKey;
                 KeyNode boost;
                 bool simulateWheel = true;
                 bool keepMove = false;
