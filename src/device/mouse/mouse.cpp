@@ -17,12 +17,14 @@ void Mouse::stopCapture()
     if (m_socket) {
         m_socket->close();
     }
-    disableTunnelForward();
     m_workProcess.kill();
 }
 
 void Mouse::onAdbProcessResult(qsc::AdbProcess::ADB_EXEC_RESULT processResult)
 {
+    if (sender() != &m_workProcess) {
+        return;
+    }
     if (processResult == qsc::AdbProcess::AER_SUCCESS_EXEC) {
         qDebug() << "adb result" << processResult;
         // 初始化TCP套接字

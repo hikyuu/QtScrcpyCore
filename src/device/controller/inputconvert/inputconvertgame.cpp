@@ -19,6 +19,7 @@ InputConvertGame::InputConvertGame(Controller *controller) : InputConvertNormal(
     loopTimer = new QTimer(this);
 
     loopTimer->setInterval(8);
+    loopTimer->setTimerType(Qt::PreciseTimer);
     connect(loopTimer, &QTimer::timeout, this, &InputConvertGame::onLoopTimer);
     loopTimer->start();
 
@@ -113,7 +114,7 @@ void InputConvertGame::mouseMove(int dx, int dy) {
     }
 
     if (checkBoundary(currentConvertPos)) {
-        qDebug() << "over the boundary";
+//        qDebug() << "over the boundary";
 
         if (currentConvertPos.x()<=0||currentConvertPos.x()>=1) {
             qDebug() << "out of pad boundary pos:" << currentConvertPos;
