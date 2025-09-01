@@ -129,8 +129,8 @@ void InputConvertGame::mouseMove(int dx, int dy) {
         mouseMoveStopTouch(true);
         mouseMoveStartTouch(*new QPointF);
         QPointF startPos = m_keyMap.getMouseMoveMap().data.mouseMove.startPos;
-        m_ctrlMouseMove.leftBoundary = generateDouble(qBound(0.0, startPos.x() - 0.3, 1.0),
-                                                      qBound(0.0, startPos.x() - 0.25, 1.0));
+        m_ctrlMouseMove.leftBoundary = generateDouble(qBound(0.1, startPos.x() - 0.3, 0.9),
+                                                      qBound(0.1, startPos.x() - 0.25, 0.9));
         m_ctrlMouseMove.maxBoundary = generateDouble(0.85, 0.90);
         m_ctrlMouseMove.topBoundary = generateDouble(0.05, 0.1);
         return;
