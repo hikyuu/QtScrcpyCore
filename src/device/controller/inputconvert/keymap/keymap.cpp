@@ -349,9 +349,6 @@ void KeyMap::setSteerWheelMapNode(KeyMapNode &keyMapNode, const QJsonObject &nod
         return;
     }
 
-
-
-
     keyMapNode.type = type;
     keyMapNode.data.steerWheel.left = { leftKey.first, leftKey.second, QPointF(0, 0), QPointF(0, 0), getItemDouble(node, "leftOffset") };
     keyMapNode.data.steerWheel.right = { rightKey.first, rightKey.second, QPointF(0, 0), QPointF(0, 0), getItemDouble(node, "rightOffset") };
@@ -620,6 +617,11 @@ int KeyMap::getSwitchKey()
 const KeyMap::KeyMapNode &KeyMap::getMouseMoveMap()
 {
     return m_keyMapNodes[m_idxMouseMove];
+}
+
+const KeyMap::KeyMapNode &KeyMap::getSteerWheelMap()
+{
+    return m_keyMapNodes[m_idxSteerWheel];
 }
 
 bool KeyMap::isValidMouseMoveMap()

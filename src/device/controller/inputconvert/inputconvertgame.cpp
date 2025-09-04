@@ -441,9 +441,11 @@ void InputConvertGame::loadKeyMap(const QString &json)
     if (m_keyMap.isValidMouseMoveMap()) {
         m_currentSpeedRatio = m_keyMap.getMouseMoveMap().data.mouseMove.speedRatio;
         m_customNormalMouseClick = m_keyMap.getCustomMouseClick();
-        m_ctrlSteerWheel.simulateWheel = m_keyMap.getMouseMoveMap().data.steerWheel.simulateWheel;
-        m_ctrlSteerWheel.keepMove = m_keyMap.getMouseMoveMap().data.steerWheel.keepMove;
-        m_ctrlSteerWheel.fixedStick = m_keyMap.getMouseMoveMap().data.steerWheel.fixedStick;
+    }
+    if (m_keyMap.isValidMouseMoveMap()) {
+        m_ctrlSteerWheel.simulateWheel = m_keyMap.getSteerWheelMap().data.steerWheel.simulateWheel;
+        m_ctrlSteerWheel.keepMove = m_keyMap.getSteerWheelMap().data.steerWheel.keepMove;
+        m_ctrlSteerWheel.fixedStick = m_keyMap.getSteerWheelMap().data.steerWheel.fixedStick;
     }
 }
 
@@ -698,7 +700,7 @@ void InputConvertGame::onWheelTimer(int key) {
     sendTouchMoveEvent(id, m_ctrlSteerWheel.delayData.currentPos);
     if (m_ctrlSteerWheel.delayData.queuePos.empty() && m_ctrlSteerWheel.delayData.pressedNum == 0) {
 //        qDebug() << "steer wheel touch up" << id;
-//        qDebug()<<"wheeling:"<< m_ctrlSteerWheel.wheeling << "keepMove:"<< m_ctrlSteerWheel.keepMove;
+        qDebug()<<"wheeling:"<< m_ctrlSteerWheel.wheeling << "keepMove:"<< m_ctrlSteerWheel.keepMove;
         if (!m_ctrlSteerWheel.wheeling || m_ctrlSteerWheel.keepMove) {
             return;
         }
