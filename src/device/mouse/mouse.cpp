@@ -10,7 +10,9 @@ Mouse::Mouse(QObject *parent, qsc::DeviceParams params) : QThread(parent)
     m_workProcess.forward(m_serial, 9999, "mouse-cursor");
 }
 
-void Mouse::run() {}
+void Mouse::run() {
+
+}
 
 void Mouse::stopCapture()
 {
@@ -38,9 +40,9 @@ void Mouse::onAdbProcessResult(qsc::AdbProcess::ADB_EXEC_RESULT processResult)
             qDebug() << "forward success";
             // 连接成功
             m_forward = true;
-            QString data = "Hello, server!\n";
+            const QString data = "Hello, server!\n";
             // 将数据转换为字节数组
-            QByteArray bytes = data.toUtf8();
+            const QByteArray bytes = data.toUtf8();
             // 将数据写入到QTcpSocket对象中
             m_socket->write(bytes);
         }
@@ -54,7 +56,7 @@ bool Mouse::disableTunnelForward()
     if (!adb) {
         return false;
     }
-    connect(adb, &qsc::AdbProcess::adbProcessResult, this, [this](qsc::AdbProcess::ADB_EXEC_RESULT processResult) {
+    connect(adb, &qsc::AdbProcess::adbProcessResult, this, [this](const qsc::AdbProcess::ADB_EXEC_RESULT processResult) {
         if (qsc::AdbProcess::AER_SUCCESS_START != processResult) {
             sender()->deleteLater();
         }
@@ -71,7 +73,7 @@ void Mouse::onMouseEvent(const QMouseEvent *from, const QSize &frameSize, const 
         return;
     }
 
-    int time = elapsedTimer.elapsed();
+    const int time = elapsedTimer.elapsed();
 
     if (time < 7) {
         return;
@@ -91,14 +93,13 @@ void Mouse::onMouseEvent(const QMouseEvent *from, const QSize &frameSize, const 
     sendMousePos(pos, m_hideMouseCursor);
 }
 
-void Mouse::sendMousePos(QPointF pos, bool gameMap)
-{
-    QJsonObject json = {
-        { "x", int(pos.x()) },
-        { "y", int(pos.y()) },
+void Mouse::sendMousePos(QPointF pos, bool gameMap) const {
+    const QJsonObject json = {
+        { "x", static_cast<int>(pos.x()) },
+        { "y", static_cast<int>(pos.y()) },
         { "gameMap", gameMap },
     };
-    QJsonDocument doc(json);
+    const QJsonDocument doc(json);
     QByteArray data = doc.toJson(QJsonDocument::Compact);
     data.push_back('\n');
     // 向服务端发送
@@ -107,12 +108,12 @@ void Mouse::sendMousePos(QPointF pos, bool gameMap)
 //    qDebug() << "spendTime" << elapsedTimer.nsecsElapsed()/1000;
 }
 
-void Mouse::onHideMouseCursor(bool hide)
+void Mouse::onHideMouseCursor(const bool hide)
 {
     m_hideMouseCursor = hide;
-    QWidget *activeWindow = QApplication::activeWindow();
+    const QWidget *activeWindow = QApplication::activeWindow();
     if (activeWindow) {
-        QPoint center = {m_frameSize.width() / 2, m_frameSize.height() / 2};
+        const QPoint center = {m_frameSize.width() / 2, m_frameSize.height() / 2};
         sendMousePos(center, m_hideMouseCursor);
     }
 }

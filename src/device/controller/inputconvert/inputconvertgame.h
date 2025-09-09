@@ -187,6 +187,8 @@ private:
         int dy = 0;
         QPointF startPos;
         QPointF lastConvertPos;
+        QPointF processedPos;
+        bool waitClick = false;
         QPointF cursorPos;
         QPoint centerPos;
         bool outOfBoundary = false;
@@ -283,9 +285,9 @@ private:
 
     bool checkBoundary(const QPointF &currentConvertPos) const;
 
-    bool mouseMove(QPointF &currentConvertPos);
+    bool mouseMove(const QPointF &currentConvertPos);
 
-    double generateDouble(double min, double max);
+    static double generateDouble(double min, double max);
 
     void generateArcPath(const QPointF &start, const QPointF &end);
 
@@ -312,7 +314,7 @@ private:
 
     static QPointF pointAtPercent(const QPointF &start, const QPointF &end, double percent);
 
-    void mouseMove(int dx, int dy);
+    void mouseMove();
 
     void onLoopTimer();
 };

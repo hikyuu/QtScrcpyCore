@@ -4,28 +4,21 @@
 #include "QtScrcpyCoreDef.h"
 #include "adbprocess.h"
 #include <QApplication>
-#include <QCoreApplication>
-#include <QCursor>
 #include <QDateTime>
-#include <QHostAddress>
-#include <QMouseEvent>
-#include <QNetworkDatagram>
 #include <QPoint>
-#include <QPointer>
-#include <QSocketNotifier>
 #include <QTcpSocket>
 #include <QThread>
 #include <QTimer>
 #include <QWidget>
+#include <QHostAddress>
 #include <controller.h>
 #include <iostream>
 
-class Mouse : public QThread
+class Mouse final : public QThread
 {
     Q_OBJECT
 
-private:
-    qsc::AdbProcess m_workProcess;
+qsc::AdbProcess m_workProcess;
     bool m_forward = false;
     QTcpSocket *m_socket; // tcp套接字
     QString m_serial;
@@ -50,7 +43,7 @@ protected:
 
 public slots:
     void onMouseEvent(const QMouseEvent *from, const QSize &frameSize, const QSize &showSize);
-    void sendMousePos(QPointF f, bool gameMap);
+    void sendMousePos(QPointF f, bool gameMap) const;
     void onHideMouseCursor(bool hide);
     void onAdbProcessResult(qsc::AdbProcess::ADB_EXEC_RESULT processResult);
     bool disableTunnelForward();
