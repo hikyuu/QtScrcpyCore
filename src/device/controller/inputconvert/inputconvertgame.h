@@ -24,6 +24,7 @@ public:
 
     virtual ~InputConvertGame();
 
+
     virtual void mouseEvent(const QMouseEvent *from, const QSize &frameSize, const QSize &showSize);
 
     virtual void wheelEvent(const QWheelEvent *from, const QSize &frameSize, const QSize &showSize);
@@ -81,7 +82,9 @@ protected:
     // mouse
     bool processMouseClick(const QMouseEvent *from);
 
-    bool processCustomMouseClick(const QMouseEvent *from);
+void processMouseClick(const QMouseEvent *from, const KeyMap::KeyMapNode &node);
+
+bool processCustomMouseClick(const QMouseEvent *from);
 
     bool processMouseMove(const QMouseEvent *from);
 
@@ -168,16 +171,18 @@ private:
             bool isEnd = true;
         } delayData;
         struct{
-            double speedRatio;
-            double skillRatio;
+            double speedRatio{};
+            double skillRatio{};
             QPointF centerPos;
             QPointF wheelPos;
-            bool wheelPressed = false;
+            QPointF endPos;
+            bool mouseWheeling = false;
+            bool buttonPressed = false;
             bool skillPressed = false;
             bool quickCast = false;
             QTimer *stopTimer = nullptr;
             QPointF localPos;
-            double skillOffset;
+            double skillOffset{};
         } mobaWheel;
     } m_ctrlSteerWheel;
     // mouse move
@@ -255,17 +260,21 @@ private:
 
     bool processMobaMouseMove(const QMouseEvent *from);
 
+    bool processMobaMouseClick(const QMouseEvent * from);
+
     static double calcDistance(const QPointF &point1, const QPointF &point2);
 
     void onWheelTimer(int key);
 
     void processMobaSkill(const KeyMap::KeyMapNode &node, const QKeyEvent *pEvent);
 
-    void processBurstClick(const KeyMap::KeyMapNode &node, const QKeyEvent *from);
+    void processBurstClick(const KeyMap::KeyMapNode &node, int key, bool press);
+
+    void processKeyBoardBurstClick(const KeyMap::KeyMapNode &node, const QKeyEvent *from);
 
     void cycleClick(QPointF pos, int clickInterval, int i1);
 
-    void stopMobaWheel(int delay) const;
+    void stopMobaWheel();
 
     void InputConvertGame::onResetMoveTimer();
 
