@@ -116,6 +116,7 @@ public:
                 QPointF centerPos = { 0.0, 0.0 };
                 KeyNode left, right, up, down, switchKey,fixedKey;
                 KeyNode boost;
+                double scaleRatio = 0.6;
                 bool simulateWheel = true;
                 bool keepMove = false;
                 bool fixedStick = false;
@@ -162,7 +163,7 @@ public:
             } mobaWheel;
             struct {
                 KeyNode keyNode;
-                double speedRatio = 3.0;
+                double skillRatio = 3.0;
                 bool stopMove = false;
                 bool quickCast = false;
             } mobaSkill;

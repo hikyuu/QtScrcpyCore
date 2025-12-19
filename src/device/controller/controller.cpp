@@ -37,20 +37,20 @@ void Controller::recvDeviceMsg(DeviceMsg *deviceMsg)
 
 void Controller::test(QRect rc)
 {
-    ControlMsg *controlMsg = new ControlMsg(ControlMsg::CMT_INJECT_TOUCH);
+    auto *controlMsg = new ControlMsg(ControlMsg::CMT_INJECT_TOUCH);
     controlMsg->setInjectTouchMsgData(
         static_cast<quint64>(POINTER_ID_MOUSE), AMOTION_EVENT_ACTION_DOWN, AMOTION_EVENT_BUTTON_PRIMARY, AMOTION_EVENT_BUTTON_PRIMARY, rc, 1.0f);
     postControlMsg(controlMsg);
 }
 
-void Controller::updateScript(QString gameScript)
+void Controller::updateScript(const QString &gameScript)
 {
     if (m_inputConvert) {
         m_inputConvert->prepareToDelete();
         delete m_inputConvert;
     }
     if (!gameScript.isEmpty()) {
-        InputConvertGame *convertGame = new InputConvertGame(this);
+        auto *convertGame = new InputConvertGame(this);
         convertGame->loadKeyMap(gameScript);
         m_inputConvert = convertGame;
         connect(convertGame, &InputConvertGame::mouseCursorHided, this, [this](bool hide) {
@@ -63,8 +63,7 @@ void Controller::updateScript(QString gameScript)
     connect(m_inputConvert, &InputConvertBase::grabCursor, this, &Controller::grabCursor);
 }
 
-bool Controller::isCurrentCustomKeymap()
-{
+bool Controller::isCurrentCustomKeymap() const {
     if (!m_inputConvert) {
         return false;
     }
@@ -72,8 +71,7 @@ bool Controller::isCurrentCustomKeymap()
     return m_inputConvert->isCurrentCustomKeymap();
 }
 
-void Controller::keyboard(void *pVoid)
-{
+void Controller::keyboard(void *pVoid) const {
     if (!m_inputConvert) {
         return;
     }

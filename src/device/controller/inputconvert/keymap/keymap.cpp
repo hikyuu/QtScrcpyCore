@@ -360,6 +360,7 @@ void KeyMap::setSteerWheelMapNode(KeyMapNode &keyMapNode, const QJsonObject &nod
     keyMapNode.data.steerWheel.simulateWheel = true;
     keyMapNode.data.steerWheel.keepMove = false;
     keyMapNode.data.steerWheel.fixedStick = false;
+    keyMapNode.data.steerWheel.scaleRatio = 0.6;
 
     if (checkItemString(node, "fixedKey")) {
         QPair<ActionType, int> fixedKey = getItemKey(node, "fixedKey");
@@ -368,6 +369,10 @@ void KeyMap::setSteerWheelMapNode(KeyMapNode &keyMapNode, const QJsonObject &nod
         }
         keyMapNode.data.steerWheel.fixedKey = { fixedKey.first, fixedKey.second };
     }
+    if (checkItemDouble(node,"scaleRatio")) {
+        keyMapNode.data.steerWheel.scaleRatio = getItemDouble(node, "scaleRatio");
+    }
+    qDebug()<<"steer wheel scale ratio:" << checkItemDouble(node,"scaleRatio")<<getItemDouble(node, "scaleRatio");
 
     if (checkItemBool(node, "simulateWheel")) {
         keyMapNode.data.steerWheel.simulateWheel = getItemBool(node, "simulateWheel");
@@ -934,13 +939,21 @@ void KeyMap::setMobaSkillMapNode(KeyMap::KeyMapNode &keyMapNode, const QJsonObje
     keyMapNode.data.mobaSkill.keyNode.type = key.first;
     keyMapNode.data.mobaSkill.keyNode.key = key.second;
     keyMapNode.data.mobaSkill.keyNode.pos = getItemPos(node, "pos");
-    keyMapNode.data.mobaSkill.speedRatio = getItemDouble(node, "speedRatio");
+
+    // 读取技能灵敏度倍率（speedRatio 或 skillRatio）
+    if (checkItemDouble(node, "speedRatio")) {
+        keyMapNode.data.mobaSkill.skillRatio = getItemDouble(node, "speedRatio");
+    } else if (checkItemDouble(node, "skillRatio")) {
+        keyMapNode.data.mobaSkill.skillRatio = getItemDouble(node, "skillRatio");
+    }
+
     keyMapNode.data.mobaSkill.stopMove = getItemBool(node, "stopMove");
     keyMapNode.data.mobaSkill.quickCast = getItemBool(node, "quickCast");
 }
 
 bool KeyMap::checkForMobaSkill(const QJsonObject &node) {
-    return checkItemString(node, "key") && checkItemPos(node, "pos") && checkItemDouble(node, "speedRatio");
+    // speedRatio 和 skillRatio 是可选的
+    return checkItemString(node, "key") && checkItemPos(node, "pos");
 }
 
 void KeyMap::setBurstClickMapNode(KeyMap::KeyMapNode &keyMapNode, const QJsonObject &node, KeyMap::KeyMapType type) {

@@ -127,7 +127,7 @@ private:
 
     QSize m_frameSize;
     QSize m_showSize;
-    double m_showSizeRatio;
+    double m_showSizeRatio{};
     bool m_gameMap = false;
     QPointer<MaskWidget> m_maskWidget;
     bool m_customNormalMouseClick = false;
@@ -151,6 +151,7 @@ private:
         bool clickMode = false;
         bool wheeling = false;
         bool simulateWheel = true;
+        double scaleRatio = 0.6;
         bool fixedStick = false;
         bool keepMove = false;
         QPointF clickPos;
@@ -158,11 +159,11 @@ private:
         // for delay
         struct {
             QPointF currentPos;
-            QTimer *timer = nullptr;
             QPainterPath path;
             QVector<QPointF> historyPoints;
             QQueue<QPointF> queuePos;
             QQueue<quint32> queueTimer;
+            int step = 0;
             int pressedNum = 0;
             QPointF endPos;
             QPointF shakeEndPos;
@@ -180,7 +181,6 @@ private:
             bool buttonPressed = false;
             bool skillPressed = false;
             bool quickCast = false;
-            QTimer *stopTimer = nullptr;
             QPointF localPos;
             double skillOffset{};
         } mobaWheel;
@@ -247,6 +247,8 @@ private:
         int wheelDelayUpTime = 200;
     } m_wheelDelayData;
 
+    bool m_mobaMouseMovePending = false;
+
     void processRotaryTable(const KeyMap::KeyMapNode &node, const QKeyEvent *constpos);
     void switchMouse(const KeyMap::KeyMapNode &node, const QKeyEvent *from);
     void processDualMode(KeyMap::KeyMapNode &node, const QKeyEvent *from);
@@ -259,6 +261,8 @@ private:
     bool processMobaWheel(const QMouseEvent *from);
 
     bool processMobaMouseMove(const QMouseEvent *from);
+
+    void processMobaMouseMoveInternal();
 
     bool processMobaMouseClick(const QMouseEvent * from);
 
@@ -290,7 +294,7 @@ private:
 
     void dragStop();
 
-    const KeyMap::KeyMapNode getNode(const QKeyEvent *from);
+    KeyMap::KeyMapNode getNode(const QKeyEvent *from);
 
     bool checkBoundary(const QPointF &currentConvertPos) const;
 
@@ -300,12 +304,12 @@ private:
 
     void generateArcPath(const QPointF &start, const QPointF &end);
 
-    void getDelayQueue(QQueue<QPointF> &queuePos, QQueue<quint32> &queueTimer, bool detect, quint32 stepTimer,
-                       quint32 randomTimer, int endFrame, QPainterPath &path) const;
+    static void getDelayQueue(QQueue<QPointF> &queuePos, QQueue<quint32> &queueTimer, bool detect, quint32 stepTimer,
+                       quint32 randomTimer, int endFrame, const QPainterPath &path) ;
 
     void updatePosition(const QPointF &newPos);
 
-    QVector<QPointF> calculateControlPoints();
+    QVector<QPointF> calculateControlPoints() const;
 
     QPainterPath generateBezierPath();
 
@@ -326,6 +330,9 @@ private:
     void mouseMove();
 
     void onLoopTimer();
+
+    static QPointF calcPerspectiveSkillDistance(const QPointF &rawPos, const QPointF &centerPos, double skillRatio);
+
 };
 
 #endif // INPUTCONVERTGAME_H

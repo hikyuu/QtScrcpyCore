@@ -22,8 +22,8 @@ public:
     void recvDeviceMsg(DeviceMsg *deviceMsg);
     void test(QRect rc);
 
-    void updateScript(QString gameScript = "");
-    bool isCurrentCustomKeymap();
+    void updateScript(const QString &gameScript = "");
+    bool isCurrentCustomKeymap() const;
 
     void postGoBack();
     void postGoHome();
@@ -52,7 +52,7 @@ public:
     void setDeviceClipboard(bool pause = true);
     void clipboardPaste();
     void postTextInput(QString &text);
-    void keyboard(void *pVoid);
+    void keyboard(void *pVoid) const;
 
 signals:
     void grabCursor(bool grab);
