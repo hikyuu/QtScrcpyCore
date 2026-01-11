@@ -97,6 +97,10 @@ set(QSC_DEVICE_SOURCES
     src/device/demuxer/demuxer.cpp
     src/device/controller/inputconvert/maskwidget.h
     src/device/controller/inputconvert/maskwidget.cpp
+    src/device/controller/inputconvert/touchmanager.h
+    src/device/controller/inputconvert/touchmanager.cpp
+    src/device/controller/inputconvert/touchinjectoradapter.h
+    src/device/controller/inputconvert/touchinjectoradapter.cpp
 )
 source_group(src/device FILES ${QSC_DEVICE_SOURCES})
 

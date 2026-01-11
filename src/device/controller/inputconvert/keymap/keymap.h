@@ -18,6 +18,8 @@ class KeyMap : public QObject
 {
     Q_OBJECT
 
+
+
 public:
     enum KeyMapType
     {
@@ -198,7 +200,7 @@ public:
 
     const KeyMap::KeyMapNode &getMouseMoveMap();
     const KeyMap::KeyMapNode &getSteerWheelMap();
-
+    const KeyMap::KeyMapNode &getMobaWheelMap();
     bool getCustomMouseClick() const;
 private:
     // set up the reverse map from key/event event to keyMapNode
@@ -277,7 +279,7 @@ private:
     int m_idxSteerWheel = -1;
 
     // moba wheel index
-    bool m_isValidMobaWheel = false;
+    int m_idxMobaWheel = -1;
 
     // mouse move index
     int m_idxMouseMove = -1;
