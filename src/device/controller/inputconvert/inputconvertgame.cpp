@@ -1,18 +1,17 @@
-﻿#include <QCursor>
+﻿#include <QApplicationStateChangeEvent>
+#include <QCursor>
 #include <QGuiApplication>
-#include <QRandomGenerator>
-#include <QTimer>
 #include <QHash>
 #include <QLine>
-#include <xlocale>
-#include <QtMath>
-#include <QApplicationStateChangeEvent>
+#include <QRandomGenerator>
 #include <QTimeLine>
+#include <QTimer>
+#include <QtMath>
 #include <Windows.h>
+#include <xlocale>
 
 #include "inputconvertgame.h"
 #include "touchinjectoradapter.h"
-
 
 InputConvertGame::InputConvertGame(Controller *controller) : InputConvertNormal(controller)
 {
@@ -26,9 +25,9 @@ InputConvertGame::InputConvertGame(Controller *controller) : InputConvertNormal(
     connect(loopTimer, &QTimer::timeout, this, &InputConvertGame::onLoopTimer);
     loopTimer->start();
 
-//     m_ctrlSteerWheel.delayData.timer = new QTimer(this);
-//     m_ctrlSteerWheel.delayData.timer->setSingleShot(true);
-//     connect(m_ctrlSteerWheel.delayData.timer, &QTimer::timeout, this, &InputConvertGame::onSteerWheelTimer);
+    //     m_ctrlSteerWheel.delayData.timer = new QTimer(this);
+    //     m_ctrlSteerWheel.delayData.timer->setSingleShot(true);
+    //     connect(m_ctrlSteerWheel.delayData.timer, &QTimer::timeout, this, &InputConvertGame::onSteerWheelTimer);
 
     m_ctrlMouseMove.resetMoveTimer.setSingleShot(true);
     connect(&m_ctrlMouseMove.resetMoveTimer, &QTimer::timeout, this, &InputConvertGame::onResetMoveTimer);
@@ -44,85 +43,20 @@ InputConvertGame::InputConvertGame(Controller *controller) : InputConvertNormal(
 
 InputConvertGame::~InputConvertGame() = default;
 
-void InputConvertGame::rawMouseEvent(const int dx, const int dy, DWORD buttons) {
-
-    if (!m_gameMap || m_pointerMode || !m_keyMap.isValidMouseMoveMap()) {
-        return;
-    }
-
-    if (dx == 0 && dy == 0) {
-        return;
-    }
-
-    mouseMoveStartTouch(*new QPointF);
-
-    const QPointF speedRatio = m_currentSpeedRatio;
-
-    QPointF currentConvertPos(
-        m_ctrlMouseMove.lastConvertPos.x() + dx / (speedRatio.x() * m_frameSize.width()),
-        m_ctrlMouseMove.lastConvertPos.y() + dy / (speedRatio.y() * m_frameSize.height())
-    );
-
-    m_ctrlMouseMove.lastConvertPos = currentConvertPos;
-    m_ctrlMouseMove.processedPos = currentConvertPos;
-    m_ctrlMouseMove.waitClick = true;
-
-    if (!m_ctrlMouseMove.needResetTouch) {
-        if (currentConvertPos.x() <= 0) {
-            currentConvertPos.setX(0);
-        } else if (currentConvertPos.x()>= 1) {
-            currentConvertPos.setX(0.99);
-        }
-        if (currentConvertPos.y() <= 0) {
-            currentConvertPos.setY(0);
-        }else if (currentConvertPos.y() >= 1) {
-            currentConvertPos.setY(0.99);
-        }
-        m_ctrlMouseMove.lastConvertPos = currentConvertPos;
-        m_ctrlMouseMove.processedPos = currentConvertPos;
-        m_ctrlMouseMove.waitClick = true;
-        return;
-    }
-
-    if (checkBoundary(currentConvertPos)) {
-
-        if (currentConvertPos.x()>= 1) {
-            qDebug() << "超出右边界！！！！！！";
-            currentConvertPos.setX(0.99);
-        } else if (currentConvertPos.x() <= 0) { currentConvertPos.setX(0); }
-        if (currentConvertPos.y() >= 1) currentConvertPos.setY(0.99);
-        else if (currentConvertPos.y() <= 0) currentConvertPos.setY(0);
-
-        mouseMove(currentConvertPos);
-        mouseMoveStopTouch(true);
-        mouseMoveStartTouch(*new QPointF);
-        m_ctrlMouseMove.waitClick = false;
-        startMouseMoveTimer();
-        loopTimer->start();
-        qDebug() << "超出边界，重置坐标";
-
-        const QPointF startPos = m_keyMap.getMouseMoveMap().data.mouseMove.startPos;
-        m_ctrlMouseMove.leftBoundary = generateDouble(qBound(0.1, startPos.x() - 0.3, 0.9),
-                                                      qBound(0.1, startPos.x() - 0.25, 0.9));
-        m_ctrlMouseMove.maxBoundary = generateDouble(0.9, 0.95);
-        m_ctrlMouseMove.topBoundary = generateDouble(0.05, 0.1);
-    }
-}
-
-void InputConvertGame::mouseMove() {
+void InputConvertGame::mouseMove()
+{
 
     if (!m_ctrlMouseMove.waitClick) {
         return;
     }
 
-    if (m_ctrlMouseMove.lastConvertPos!=m_ctrlMouseMove.processedPos) {
+    if (m_ctrlMouseMove.lastConvertPos != m_ctrlMouseMove.processedPos) {
         return;
     }
     startMouseMoveTimer();
     mouseMove(m_ctrlMouseMove.processedPos);
     m_ctrlMouseMove.waitClick = false;
 }
-
 
 void InputConvertGame::stopAllInteractions(bool restoreCursor)
 {
@@ -133,8 +67,8 @@ void InputConvertGame::stopAllInteractions(bool restoreCursor)
     stopMouseMoveTimer();
 
     if (loopTimer) {
-//        qDebug()<<"停止loopTimer";
-//        loopTimer->stop();
+        //        qDebug()<<"停止loopTimer";
+        //        loopTimer->stop();
     }
 
     if (m_dragDelayData.timer) {
@@ -236,8 +170,8 @@ void InputConvertGame::activated(const bool isActive)
 void InputConvertGame::keyboard(void *pVoid)
 {
     if (m_maskWidget.isNull()) {
-        auto* pObject = static_cast<QObject*>(pVoid);
-        QWidget* pWidget = qobject_cast<QWidget*>(pObject);
+        auto *pObject = static_cast<QObject *>(pVoid);
+        QWidget *pWidget = qobject_cast<QWidget *>(pObject);
         if (!pWidget) {
             qDebug() << "窗口获取失败";
             return;
@@ -253,7 +187,8 @@ void InputConvertGame::keyboard(void *pVoid)
     }
 }
 
-void InputConvertGame::prepareToDelete() {
+void InputConvertGame::prepareToDelete()
+{
     stopAllInteractions(true);
     if (!m_maskWidget.isNull()) {
         m_maskWidget->hide();
@@ -309,12 +244,12 @@ void InputConvertGame::mouseEvent(const QMouseEvent *from, const QSize &frameSiz
 
 void InputConvertGame::wheelEvent(const QWheelEvent *from, const QSize &frameSize, const QSize &showSize)
 {
-//    qint64 time = m_elapsedTimer.restart();
-//    qDebug() << "wheelEvent time:" << time;
+    //    qint64 time = m_elapsedTimer.restart();
+    //    qDebug() << "wheelEvent time:" << time;
 
     if (m_gameMap) {
         // start this
-//        qDebug() << "wheel begin:" << m_pointerMode;
+        //        qDebug() << "wheel begin:" << m_pointerMode;
 
         if (!m_pointerMode) {
             if (m_wheelDelayData.wheeling) {
@@ -322,7 +257,7 @@ void InputConvertGame::wheelEvent(const QWheelEvent *from, const QSize &frameSiz
             }
             m_wheelDelayData.wheeling = true;
 
-            QPointF processedPos = generatePos(QPointF{0.96, 0.28}, 0.01, 3);
+            QPointF processedPos = generatePos(QPointF{ 0.96, 0.28 }, 0.01, 3);
             m_keyPosMap[QEvent::Wheel] = processedPos;
 
             const auto h = m_touchInjector->begin(QEvent::Wheel, processedPos);
@@ -334,17 +269,13 @@ void InputConvertGame::wheelEvent(const QWheelEvent *from, const QSize &frameSiz
                 delay = QRandomGenerator::global()->bounded(30, 50);
                 wheelDelay = 500;
             } else {
-                qDebug()<< "wheel down";
+                qDebug() << "wheel down";
                 delay = QRandomGenerator::global()->bounded(300, 450);
                 wheelDelay = 500;
             }
-            QTimer::singleShot(delay, this, [this, h]() {
-                m_touchInjector->end(h, m_keyPosMap[QEvent::Wheel]);
-            });
-            QTimer::singleShot(wheelDelay, this, [this]() {
-                m_wheelDelayData.wheeling = false;
-            });
-        }else{
+            QTimer::singleShot(delay, this, [this, h]() { m_touchInjector->end(h, m_keyPosMap[QEvent::Wheel]); });
+            QTimer::singleShot(wheelDelay, this, [this]() { m_wheelDelayData.wheeling = false; });
+        } else {
             if (m_wheelDelayData.wheeling) {
                 return;
             }
@@ -354,19 +285,19 @@ void InputConvertGame::wheelEvent(const QWheelEvent *from, const QSize &frameSiz
 
             if (from->modifiers() & Qt::AltModifier) {
 
-                QPointF leftStartPos = {qBound(0.001, startPos.x() - 0.01, 0.99), startPos.y()};
-                QPointF rightStartPos = {qBound(0.001, startPos.x() + 0.01, 0.99), startPos.y()};
-                QPointF leftEndPos = {qBound(0.0025, leftStartPos.x() - 0.025, 0.99), leftStartPos.y()};
-                QPointF rightEndPos = {qBound(0.0025, rightStartPos.x() + 0.025, 0.99), rightStartPos.y()};
+                QPointF leftStartPos = { qBound(0.001, startPos.x() - 0.01, 0.99), startPos.y() };
+                QPointF rightStartPos = { qBound(0.001, startPos.x() + 0.01, 0.99), startPos.y() };
+                QPointF leftEndPos = { qBound(0.0025, leftStartPos.x() - 0.025, 0.99), leftStartPos.y() };
+                QPointF rightEndPos = { qBound(0.0025, rightStartPos.x() + 0.025, 0.99), rightStartPos.y() };
 
                 if (from->angleDelta().x() > 0) {
                     //上滚放大，由中心向外移动
-                    qDebug() << "wheel up"<< leftStartPos << rightStartPos<< leftEndPos << rightEndPos;
+                    qDebug() << "wheel up" << leftStartPos << rightStartPos << leftEndPos << rightEndPos;
                 } else {
                     //下滚缩小，由外向中心移动
                     std::swap(leftStartPos, leftEndPos);
                     std::swap(rightStartPos, rightEndPos);
-                    qDebug() << "wheel down"<< leftStartPos << rightStartPos<< leftEndPos << rightEndPos;
+                    qDebug() << "wheel down" << leftStartPos << rightStartPos << leftEndPos << rightEndPos;
                 }
 
                 QQueue<QPointF> leftQueuePos;
@@ -377,10 +308,10 @@ void InputConvertGame::wheelEvent(const QWheelEvent *from, const QSize &frameSiz
                 const int rightKey = Qt::AltModifier + Qt::Key_Zoom + Qt::Key_Right;
 
                 getCurvedDelayQueue(leftStartPos, leftEndPos, 30, leftQueuePos, queueTimer);
-                m_wheelDelayData.dragData.append({leftKey, leftStartPos, leftStartPos, leftQueuePos});
+                m_wheelDelayData.dragData.append({ leftKey, leftStartPos, leftStartPos, leftQueuePos });
 
                 getCurvedDelayQueue(rightStartPos, rightEndPos, 30, rightQueuePos, queueTimer);
-                m_wheelDelayData.dragData.append({rightKey, rightStartPos, rightStartPos, rightQueuePos});
+                m_wheelDelayData.dragData.append({ rightKey, rightStartPos, rightStartPos, rightQueuePos });
 
                 // move TouchManager dependency behind adapter
                 const auto hLeft = m_touchInjector->begin(leftKey, leftStartPos);
@@ -398,14 +329,14 @@ void InputConvertGame::wheelEvent(const QWheelEvent *from, const QSize &frameSiz
                     qDebug() << "wheel up" << endPos;
                 } else {
                     endPos.setY(startPos.y() - generateDouble(0.49, 0.5));
-                    qDebug() << "wheel down"<< endPos;
+                    qDebug() << "wheel down" << endPos;
                 }
 
                 QQueue<QPointF> QueuePos;
                 QQueue<quint32> queueTimer;
                 getCurvedDelayQueue(startPos, endPos, 30, QueuePos, queueTimer);
 
-                m_wheelDelayData.dragData.append({QEvent::Wheel, startPos, startPos, QueuePos});
+                m_wheelDelayData.dragData.append({ QEvent::Wheel, startPos, startPos, QueuePos });
 
                 const auto h = m_touchInjector->begin(QEvent::Wheel, startPos);
                 Q_UNUSED(h);
@@ -463,18 +394,15 @@ void InputConvertGame::processType(KeyMap::KeyMapNode node, const QKeyEvent *fro
     // 处理普通按键
     case KeyMap::KMT_CLICK:
         processKeyClick(false, node, from);
-            processAndroidKey(node.data.click.keyNode.androidKey, from->type());
+        processAndroidKey(node.data.click.keyNode.androidKey, from->type());
         break;
     case KeyMap::KMT_CLICK_TWICE:
         processKeyClick(true, node, from);
-            processAndroidKey(node.data.clickTwice.keyNode.androidKey, from->type());
+        processAndroidKey(node.data.clickTwice.keyNode.androidKey, from->type());
         break;
     case KeyMap::KMT_CLICK_MULTI:
         processKeyClickMulti(
-                node.data.clickMulti.keyNode.delayClickNodes,
-                node.data.clickMulti.keyNode.delayClickNodesCount,
-                node.data.clickMulti.pressTime,
-                from);
+            node.data.clickMulti.keyNode.delayClickNodes, node.data.clickMulti.keyNode.delayClickNodesCount, node.data.clickMulti.pressTime, from);
         break;
     case KeyMap::KMT_DRAG:
         processKeyDrag(node.data.drag.keyNode.pos, node.data.drag.keyNode.extendPos, from);
@@ -498,7 +426,7 @@ void InputConvertGame::processType(KeyMap::KeyMapNode node, const QKeyEvent *fro
         processKeyBoardBurstClick(node, from);
         break;
     default:
-//        qDebug() << "Invalid key map type";
+        //        qDebug() << "Invalid key map type";
         break;
     }
     bool freshMouseMove = node.freshMouseMove;
@@ -531,8 +459,8 @@ void InputConvertGame::loadKeyMap(const QString &json)
         m_ctrlSteerWheel.mobaWheel.wheelCenterPos = m_keyMap.getMobaWheelMap().data.mobaWheel.wheelPos;
         m_ctrlSteerWheel.mobaWheel.speedRatio = m_keyMap.getMobaWheelMap().data.mobaWheel.speedRatio;
 
-        qDebug()<< "loadKeyMap scaleRatio:" << m_ctrlSteerWheel.scaleRatio;
-        qDebug()<< "steerWheel simulateWheel:" << m_ctrlSteerWheel.simulateWheel;
+        qDebug() << "loadKeyMap scaleRatio:" << m_ctrlSteerWheel.scaleRatio;
+        qDebug() << "steerWheel simulateWheel:" << m_ctrlSteerWheel.simulateWheel;
 
         m_ctrlSteerWheel.keepMove = m_keyMap.getSteerWheelMap().data.steerWheel.keepMove;
     }
@@ -551,7 +479,7 @@ void InputConvertGame::updateSize(const QSize &frameSize, const QSize &showSize)
         m_showSize = showSize;
         m_touchManager->updateSize(frameSize);
         m_showSizeRatio = m_showSize.width() / m_showSize.height();
-        m_ctrlMouseMove.centerPos = QPoint(m_showSize.width()/2, m_showSize.height()/2);
+        m_ctrlMouseMove.centerPos = QPoint(m_showSize.width() / 2, m_showSize.height() / 2);
         qDebug() << "updateSize frameSize:" << m_frameSize << "showSize:" << m_showSize;
     }
 }
@@ -567,40 +495,39 @@ void InputConvertGame::sendKeyEvent(AndroidKeyeventAction action, AndroidKeycode
     sendControlMsg(controlMsg);
 }
 
-
 // -------- steer wheel event --------
-void InputConvertGame::getCurvedDelayQueue(const QPointF &start, const QPointF &end, int stepCount,
-                                      QQueue<QPointF> &queuePos, QQueue<quint32> &queueTimer)
+void InputConvertGame::getCurvedDelayQueue(const QPointF &start, const QPointF &end, int stepCount, QQueue<QPointF> &queuePos, QQueue<quint32> &queueTimer)
 {
     QQueue<QPointF> queue;
     QQueue<quint32> queue2;
 
     QTimeLine timeline;
     timeline.setFrameRange(0, QRandomGenerator::global()->bounded(stepCount - 5, stepCount + 5)); // 500ms / 4ms = 125帧
-    timeline.setEasingCurve(QEasingCurve::InOutQuad); // 模拟加速度
+    timeline.setEasingCurve(QEasingCurve::InOutQuad);                                             // 模拟加速度
 
-// 垂直偏移量（曲率控制因子）
+    // 垂直偏移量（曲率控制因子）
     double offset = QLineF(start, end).length() * generateDouble(0.05, 0.1);
 
-// 计算起点到终点的方向向量
+    // 计算起点到终点的方向向量
     double dx = end.x() - start.x();
     double dy = end.y() - start.y();
 
-// 计算垂直方向（始终指向坐标系上方）
+    // 计算垂直方向（始终指向坐标系上方）
     QPointF dir;
-    if (dx >= 0) { // 终点在起点右侧或相同x位置
+    if (dx >= 0) {              // 终点在起点右侧或相同x位置
         dir = QPointF(dy, -dx); // 逆时针旋转90度（指向坐标系上方）
-    } else { // 终点在起点左侧
+    } else {                    // 终点在起点左侧
         dir = QPointF(-dy, dx); // 顺时针旋转90度（指向坐标系上方）
     }
 
     double len = std::hypot(dir.x(), dir.y());
-    if (len > 0) dir /= len; // 单位化
+    if (len > 0)
+        dir /= len; // 单位化
 
-// 修改：在x方向0.3-0.7之间的随机位置设置控制点
-    double ratio = generateDouble(0.2, 0.8); // 生成0.3-0.7之间的随机比例
+    // 修改：在x方向0.3-0.7之间的随机位置设置控制点
+    double ratio = generateDouble(0.2, 0.8);           // 生成0.3-0.7之间的随机比例
     QPointF basePoint = start + ratio * (end - start); // 在x方向的指定比例位置建立基准点
-    QPointF ctrl1 = basePoint + dir * offset; // 轻微上凸的控制点
+    QPointF ctrl1 = basePoint + dir * offset;          // 轻微上凸的控制点
 
     QPainterPath path;
 
@@ -619,7 +546,8 @@ void InputConvertGame::getCurvedDelayQueue(const QPointF &start, const QPointF &
     queueTimer = queue2;
 }
 
-void InputConvertGame::onResetMoveTimer() {
+void InputConvertGame::onResetMoveTimer()
+{
 
     m_ctrlMouseMove.resetMoveTimer.stop();
     mouseMoveStopTouch(false);
@@ -629,17 +557,14 @@ void InputConvertGame::onResetMoveTimer() {
     }
 
     if (m_ctrlMouseMove.startPos == m_ctrlMouseMove.lastConvertPos) {
-//        qDebug() << "reset move timer, but no move";
+        //        qDebug() << "reset move timer, but no move";
         return;
     }
 
-    QTimer::singleShot(QRandomGenerator::global()->bounded(50,100), this, [this]() {
-        mouseMoveStartTouch(*new QPointF());
-    });
+    QTimer::singleShot(QRandomGenerator::global()->bounded(50, 100), this, [this]() { mouseMoveStartTouch(*new QPointF()); });
 
     m_ctrlMouseMove.resetMoveDelay = QRandomGenerator::global()->bounded(500, 1000);
-//    qDebug() << "reset move timer next delay:" << m_ctrlMouseMove.resetMoveDelay;
-
+    //    qDebug() << "reset move timer next delay:" << m_ctrlMouseMove.resetMoveDelay;
 }
 
 void InputConvertGame::onSteerWheelTimer()
@@ -654,7 +579,8 @@ void InputConvertGame::onLoopTimer()
     processMobaMouseMoveInternal();
 }
 
-void InputConvertGame::onStopMobaWheelTimer(){
+void InputConvertGame::onStopMobaWheelTimer()
+{
     m_ctrlSteerWheel.delayData.queueTimer.clear();
     m_ctrlSteerWheel.delayData.queuePos.clear();
     if (!m_ctrlSteerWheel.mobaWheel.mouseWheeling) {
@@ -666,7 +592,8 @@ void InputConvertGame::onStopMobaWheelTimer(){
     m_touchInjector->detachId(id);
 }
 
-void InputConvertGame::onWheelTimer(const int key) {
+void InputConvertGame::onWheelTimer(const int key)
+{
     const int id = m_touchInjector->idForKey(key);
     if (!m_ctrlSteerWheel.delayData.queuePos.empty()) {
         m_ctrlSteerWheel.delayData.step++;
@@ -678,7 +605,7 @@ void InputConvertGame::onWheelTimer(const int key) {
         m_ctrlSteerWheel.delayData.queueTimer.dequeue();
         m_touchInjector->moveId(id, m_ctrlSteerWheel.delayData.currentPos);
         m_ctrlSteerWheel.delayData.step = 0;
-    }else {
+    } else {
         m_ctrlSteerWheel.delayData.step = 0;
         if (m_ctrlSteerWheel.delayData.pressedNum == 0) {
             if (!m_ctrlSteerWheel.wheeling || m_ctrlSteerWheel.keepMove) {
@@ -697,9 +624,7 @@ void InputConvertGame::onWheelTimer(const int key) {
             QPointF startPos = m_ctrlSteerWheel.delayData.shakeEndPos;
             QPointF endPos = m_ctrlSteerWheel.delayData.middlePoint;
             if (m_ctrlSteerWheel.delayData.isEnd) {
-                QPointF middlePoint = pointAtPercent(m_ctrlSteerWheel.centerPos + m_ctrlSteerWheel.delayData.offsetY,
-                                                     m_ctrlSteerWheel.delayData.endPos,
-                                                     0.5);
+                QPointF middlePoint = pointAtPercent(m_ctrlSteerWheel.centerPos + m_ctrlSteerWheel.delayData.offsetY, m_ctrlSteerWheel.delayData.endPos, 0.5);
                 middlePoint = generatePos(middlePoint, 0.01, 2);
                 endPos = middlePoint;
                 m_ctrlSteerWheel.delayData.middlePoint = middlePoint;
@@ -711,245 +636,17 @@ void InputConvertGame::onWheelTimer(const int key) {
                 std::swap(startPos, endPos);
             }
             m_ctrlSteerWheel.delayData.path = generateLinePath(startPos, endPos);
-            getDelayQueue(
-                    m_ctrlSteerWheel.delayData.queuePos,
-                    m_ctrlSteerWheel.delayData.queueTimer, false, 2, 2, 15, m_ctrlSteerWheel.delayData.path);
+            getDelayQueue(m_ctrlSteerWheel.delayData.queuePos, m_ctrlSteerWheel.delayData.queueTimer, false, 2, 2, 15, m_ctrlSteerWheel.delayData.path);
             m_ctrlSteerWheel.delayData.isEnd = !m_ctrlSteerWheel.delayData.isEnd;
         }
     }
 }
 
-void InputConvertGame::processSteerWheel(const KeyMap::KeyMapNode &node, const QKeyEvent *from)
-{
-    const int key = from->key();
-    // 是否按下
-    const bool keyPress = from->type() == QEvent::KeyPress;
-    const bool boostKey = key == node.data.steerWheel.boost.key;
-
-    if (key == node.data.steerWheel.switchKey.key) {
-        if (!keyPress) return;
-        m_ctrlSteerWheel.clickMode = !m_ctrlSteerWheel.clickMode;
-        return;
-    }
-    if (key == node.data.steerWheel.fixedKey.key) {
-        if (!keyPress) return;
-        m_ctrlSteerWheel.fixedStick = !m_ctrlSteerWheel.fixedStick;
-        qDebug()<< "steer wheel fixed stick:" << m_ctrlSteerWheel.fixedStick;
-        return;
-    }
-
-    // identify keys
-    if (key == node.data.steerWheel.up.key) {
-        m_ctrlSteerWheel.pressedUp = keyPress;
-        m_ctrlSteerWheel.clickPos = node.data.steerWheel.up.pos;
-    } else if (key == node.data.steerWheel.right.key) {
-        m_ctrlSteerWheel.pressedRight = keyPress;
-        m_ctrlSteerWheel.clickPos = node.data.steerWheel.right.pos;
-    } else if (key == node.data.steerWheel.down.key) {
-        m_ctrlSteerWheel.pressedDown = keyPress;
-        m_ctrlSteerWheel.clickPos = node.data.steerWheel.down.pos;
-    } else if (key == node.data.steerWheel.left.key){ // left
-        m_ctrlSteerWheel.pressedLeft = keyPress;
-        m_ctrlSteerWheel.clickPos = node.data.steerWheel.left.pos;
-    }
-    if (m_ctrlSteerWheel.clickMode) {
-        if (QEvent::KeyPress == from->type()) {
-            const auto h = m_touchInjector->begin(from->key(), generatePos(m_ctrlSteerWheel.clickPos, 0.01,3));
-            Q_UNUSED(h);
-        } else if (QEvent::KeyRelease == from->type()) {
-            m_touchInjector->endByKey(from->key(), m_keyPosMap[from->key()]);
-        }
-        return;
-    }
-    // calc offset and wheelPressed number
-    QPointF offset(0.0, 0.0);
-    int pressedNum = 0;
-    if (m_ctrlSteerWheel.pressedUp) {
-        ++pressedNum;
-        offset.ry() -= node.data.steerWheel.up.extendOffset;
-        m_ctrlSteerWheel.delayData.offsetY = {0, offset.y()};
-    }
-    if (m_ctrlSteerWheel.pressedRight) {
-        ++pressedNum;
-        offset.rx() += node.data.steerWheel.right.extendOffset;
-    }
-    if (m_ctrlSteerWheel.pressedDown) {
-        ++pressedNum;
-        offset.ry() += node.data.steerWheel.down.extendOffset;
-        m_ctrlSteerWheel.delayData.offsetY = {0, offset.y()};
-    }
-    if (m_ctrlSteerWheel.pressedLeft) {
-        ++pressedNum;
-        offset.rx() -= node.data.steerWheel.left.extendOffset;
-    }
-    m_ctrlSteerWheel.delayData.pressedNum = pressedNum;
-
-    if (boostKey) {
-        if(!keyPress) return;
-        if (!m_ctrlSteerWheel.pressedUp) {
-            m_ctrlSteerWheel.pressedBoost = true;
-//            qDebug() << "boost key pressed, but no up key pressed";
-            return;
-        }
-        m_ctrlSteerWheel.pressedBoost = !m_ctrlSteerWheel.pressedBoost;
-    }else if (key == node.data.steerWheel.up.key) {
-        if (keyPress) {
-            if (from->modifiers() & Qt::ShiftModifier && node.data.steerWheel.boost.key == Qt::Key_Shift) {
-                m_ctrlSteerWheel.pressedBoost = true; // 按下shift键持续奔跑
-            }
-            if(from->modifiers() & Qt::ControlModifier && node.data.steerWheel.boost.key == Qt::Key_Control) {
-                m_ctrlSteerWheel.pressedBoost = true; // 按下Ctrl键持续奔跑
-            }
-            if( from->modifiers() & Qt::AltModifier && node.data.steerWheel.boost.key == Qt::Key_Alt) {
-                m_ctrlSteerWheel.pressedBoost = true; // 按下Alt键持续奔跑
-            }
-        } else if (pressedNum>0){
-            m_ctrlSteerWheel.pressedBoost = false; // 取消持续奔跑
-        }
-    }
-
-    if (m_ctrlSteerWheel.pressedBoost) {
-        if (m_ctrlSteerWheel.pressedUp) {
-            offset.ry() -= node.data.steerWheel.boost.extendOffset;
-            m_ctrlSteerWheel.delayData.offsetY = {0, offset.y()};
-        }
-        if (m_ctrlSteerWheel.pressedRight) {
-            offset.rx() += node.data.steerWheel.boost.extendOffset;
-        }
-        if (m_ctrlSteerWheel.pressedLeft) {
-            offset.rx() -= node.data.steerWheel.boost.extendOffset;
-        }
-        if (m_ctrlSteerWheel.pressedDown) {
-            offset.ry() += node.data.steerWheel.boost.extendOffset;
-            m_ctrlSteerWheel.delayData.offsetY = {0, offset.y()};
-        }
-    }
-
-    if (pressedNum > 1) {
-        offset /= generateDouble(1.5, 2);
-    }
-
-    int frame = 3;
-    if (m_ctrlSteerWheel.simulateWheel) {
-        frame = 15;
-    }
-    m_ctrlSteerWheel.delayData.queueTimer.clear();
-    m_ctrlSteerWheel.delayData.queuePos.clear();
-    // last key release and timer no active, active timer to detouch
-    if (pressedNum == 0) {
-
-        if (m_ctrlSteerWheel.mobaWheel.mouseWheeling) return;
-
-        if (m_ctrlSteerWheel.mobaWheel.buttonPressed) {
-//            qDebug() << "方向键弹起，鼠标还按下";
-            m_ctrlSteerWheel.mobaWheel.mouseWheeling = true;
-            m_mobaMouseMovePending = true;
-            return;
-        }
-        //取消持续奔跑
-//        qDebug()<< "boost key released, cancel boost"<< m_ctrlSteerWheel.pressedBoost;
-        m_ctrlSteerWheel.pressedBoost = false;
-
-        const double distance = calcDistance(m_ctrlSteerWheel.delayData.currentPos, m_ctrlSteerWheel.centerPos);
-//        qDebug() << "distance:" << distance;
-        if (m_ctrlSteerWheel.simulateWheel && distance >= node.data.steerWheel.up.extendOffset) {
-//            qDebug() << "steer move center";
-            updatePosition(m_ctrlSteerWheel.centerPos);
-            m_ctrlSteerWheel.delayData.path = generateBezierPath();
-            getDelayQueue(
-                    m_ctrlSteerWheel.delayData.queuePos,
-                    m_ctrlSteerWheel.delayData.queueTimer, false,
-                    1, 0, frame, m_ctrlSteerWheel.delayData.path);
-            return;
-        }
-
-        if (!m_ctrlSteerWheel.wheeling) {
-            return;
-        }
-        const int touchKeyID = m_touchInjector->idForKey(m_ctrlSteerWheel.touchKey);
-        m_touchInjector->upId(touchKeyID, m_ctrlSteerWheel.delayData.currentPos);
-        m_touchInjector->detachId(touchKeyID);
-        m_ctrlSteerWheel.wheeling = false;
-        return;
-    }
-
-    if (pressedNum > 0) {
-        m_ctrlSteerWheel.mobaWheel.mouseWheeling = false;
-    }
-
-    // 只有一个按键按下，且没有正在操作方向盘
-    // 如果是boost按键，则不处理
-    // 如果是第一个按键，则开始操作方向盘
-    if (pressedNum == 1 && keyPress && !boostKey && !m_ctrlSteerWheel.wheeling ) {
-//        qDebug() << "first press";
-//        QMutexLocker locker(&m_ctrlSteerWheel.steerMutex);
-        if (m_ctrlSteerWheel.wheeling) {
-            return;
-        }
-        m_ctrlSteerWheel.wheeling = true;
-
-        if (m_ctrlSteerWheel.mobaWheel.mouseWheeling) {
-            onStopMobaWheelTimer();
-        }
-
-        const int id = m_touchInjector->attachIdForKey(m_ctrlSteerWheel.touchKey);
-
-        QPointF centerPos = node.data.steerWheel.centerPos;
-        if (m_ctrlSteerWheel.simulateWheel && !m_ctrlSteerWheel.fixedStick) {
-            centerPos = generatePos(node.data.steerWheel.centerPos, 0.025, 3);
-        }
-        m_ctrlSteerWheel.centerPos = centerPos;
-
-        QPointF endPos = centerPos + offset;
-
-        if (m_ctrlSteerWheel.simulateWheel) {
-            double distance = calcDistance(centerPos, endPos);
-            endPos = generatePos(endPos, distance * 0.05, 2);
-        }
-
-        m_ctrlSteerWheel.delayData.historyPoints.clear();
-        m_ctrlSteerWheel.delayData.historyPoints.append(centerPos);
-        updatePosition(endPos);
-
-        m_touchInjector->downId(id, centerPos);
-        m_ctrlSteerWheel.delayData.currentPos = centerPos;
-        m_ctrlSteerWheel.delayData.path = generateBezierPath();
-        getDelayQueue(
-                m_ctrlSteerWheel.delayData.queuePos,
-                m_ctrlSteerWheel.delayData.queueTimer, false, 1, 0, frame,
-                m_ctrlSteerWheel.delayData.path);
-    } else {
-        bool slowEnd = true;
-        if (boostKey) {
-            slowEnd = false; // boost 按键不需要慢速结束
-        }
-        const QPointF startPos = m_ctrlSteerWheel.delayData.currentPos;
-        const QPointF centerPos = m_ctrlSteerWheel.centerPos;
-        const QPointF endPos = centerPos + offset;
-
-        if (pressedNum > 1) {
-            m_ctrlSteerWheel.delayData.isEnd = true;
-            slowEnd = false;
-        }
-        if (!m_ctrlSteerWheel.simulateWheel) {
-            slowEnd = false;
-        }
-        updatePosition(endPos);
-        m_ctrlSteerWheel.delayData.endPos = endPos;
-        m_ctrlSteerWheel.delayData.shakeEndPos = endPos;
-
-        if (!m_ctrlSteerWheel.wheeling) return;
-
-        m_ctrlSteerWheel.delayData.path = generateLinePath(startPos, endPos);
-        getDelayQueue(
-                m_ctrlSteerWheel.delayData.queuePos,
-                m_ctrlSteerWheel.delayData.queueTimer, slowEnd,
-                1, 0, frame, m_ctrlSteerWheel.delayData.path);
-    }
-}
+// `processSteerWheel` implementation moved to steerwheel/steerwheel.cpp
 // -------- key event --------
 
-QPointF InputConvertGame::pointAtPercent(const QPointF& start, const QPointF& end,double percent) {
+QPointF InputConvertGame::pointAtPercent(const QPointF &start, const QPointF &end, double percent)
+{
     // 1. 计算方向向量（终点 - 起点）
     QPointF direction = end - start;
 
@@ -961,14 +658,16 @@ QPointF InputConvertGame::pointAtPercent(const QPointF& start, const QPointF& en
     return result;
 }
 
-void InputConvertGame::updatePosition(const QPointF& newPos) {
+void InputConvertGame::updatePosition(const QPointF &newPos)
+{
     m_ctrlSteerWheel.delayData.historyPoints.append(newPos);
     if (m_ctrlSteerWheel.delayData.historyPoints.size() > MAX_HISTORY) {
-        m_ctrlSteerWheel.delayData.historyPoints.removeFirst();  // 移除最旧的点
+        m_ctrlSteerWheel.delayData.historyPoints.removeFirst(); // 移除最旧的点
     }
 }
 
-QPointF InputConvertGame::generatePos(QPointF pos, double radius = 0.01, double k = 3.0) {
+QPointF InputConvertGame::generatePos(QPointF pos, double radius = 0.01, double k = 3.0)
+{
     // 生成[0,1]均匀分布的随机数
     double theta = QRandomGenerator::global()->generateDouble() * 2 * M_PI; // [0, 2π]
 
@@ -980,21 +679,25 @@ QPointF InputConvertGame::generatePos(QPointF pos, double radius = 0.01, double 
     double x = pos.x() + r * std::cos(theta);
     double y = pos.y() + r * std::sin(theta);
 
-    return {x, y};
+    return { x, y };
 }
 
-void InputConvertGame::getDelayQueue(QQueue<QPointF> &queuePos,
-                                     QQueue<quint32> &queueTimer,
-                                     const bool detect, quint32 stepTimer,
-                                    const quint32 randomTimer, int endFrame,
-                                    const QPainterPath &path) {
+void InputConvertGame::getDelayQueue(
+    QQueue<QPointF> &queuePos,
+    QQueue<quint32> &queueTimer,
+    const bool detect,
+    quint32 stepTimer,
+    const quint32 randomTimer,
+    int endFrame,
+    const QPainterPath &path)
+{
     QTimeLine timeline;
 
     if (detect) {
         timeline.setEasingCurve(QEasingCurve::OutCirc);
         endFrame = 60;
     }
-    if (stepTimer<1) {
+    if (stepTimer < 1) {
         stepTimer = 1;
     }
     timeline.setFrameRange(0, endFrame);
@@ -1019,25 +722,27 @@ void InputConvertGame::getDelayQueue(QQueue<QPointF> &queuePos,
     queueTimer = queue2;
 }
 
-QVector<QPointF> InputConvertGame::calculateControlPoints() const {
+QVector<QPointF> InputConvertGame::calculateControlPoints() const
+{
     QVector<QPointF> ctrlPoints;
     const auto &historyPoints = m_ctrlSteerWheel.delayData.historyPoints;
 
-    if (historyPoints.size() < 2) return ctrlPoints;
+    if (historyPoints.size() < 2)
+        return ctrlPoints;
 
     // 情况1：有2个历史点（生成三次贝塞尔曲线）
     if (historyPoints.size() == 2) {
         const QPointF dir = historyPoints[1] - historyPoints[0]; // 方向向量
-        const QPointF perpDir(-dir.y(), dir.x());  // 垂直向量（法线方向）
+        const QPointF perpDir(-dir.y(), dir.x());                // 垂直向量（法线方向）
 
         auto randSignedOffset = [](const qreal min, const qreal max) -> qreal {
             qreal base = generateDouble(min, max);
             return QRandomGenerator::global()->bounded(2) ? base : -base; // 50% 概率取负值
         };
         // 随机化参数
-        qreal alpha = generateDouble(0.3, 0.7);       // [0.3, 0.7)
-        qreal gamma = generateDouble(0.3, 0.7);       // [0.3, 0.7)
-        qreal betaScale = randSignedOffset(0.1, 0.3); // [0.05, 0.15)
+        qreal alpha = generateDouble(0.3, 0.7);        // [0.3, 0.7)
+        qreal gamma = generateDouble(0.3, 0.7);        // [0.3, 0.7)
+        qreal betaScale = randSignedOffset(0.1, 0.3);  // [0.05, 0.15)
         qreal deltaScale = randSignedOffset(0.1, 0.3); // [0.05, 0.15)
         // 计算控制点（靠近连线）
         const QPointF control1 = historyPoints[0] + alpha * dir + betaScale * perpDir;
@@ -1049,7 +754,7 @@ QVector<QPointF> InputConvertGame::calculateControlPoints() const {
     // 情况2：有3个历史点（生成平滑曲线）
     // 控制点1：P1 + (P2 - P0) * k，保证切线连续
     QPointF tangent = historyPoints[2] - historyPoints[0];
-    QPointF ctrl1 = historyPoints[1] + tangent * 0.5;  // 0.2为平滑系数
+    QPointF ctrl1 = historyPoints[1] + tangent * 0.5; // 0.2为平滑系数
 
     // 控制点2：P2 - (P2 - P1) * k，避免曲率突变
     QPointF dirPrev = historyPoints[1] - historyPoints[0];
@@ -1059,7 +764,8 @@ QVector<QPointF> InputConvertGame::calculateControlPoints() const {
     return ctrlPoints;
 }
 
-QPainterPath InputConvertGame::generateLinePath(QPointF start, QPointF end) {
+QPainterPath InputConvertGame::generateLinePath(QPointF start, QPointF end)
+{
     QPainterPath path;
     path.moveTo(start);
     path.lineTo(end);
@@ -1067,9 +773,11 @@ QPainterPath InputConvertGame::generateLinePath(QPointF start, QPointF end) {
 }
 
 // 生成贝塞尔曲线路径（用于绘制）
-QPainterPath InputConvertGame::generateBezierPath() {
+QPainterPath InputConvertGame::generateBezierPath()
+{
     QPainterPath path;
-    if (m_ctrlSteerWheel.delayData.historyPoints.isEmpty()) return path;
+    if (m_ctrlSteerWheel.delayData.historyPoints.isEmpty())
+        return path;
 
     path.moveTo(m_ctrlSteerWheel.delayData.historyPoints.first());
 
@@ -1081,14 +789,14 @@ QPainterPath InputConvertGame::generateBezierPath() {
 
     // 根据控制点数量选择曲线类型
     switch (ctrlPoints.size()) {
-        case 2:  // 二次贝塞尔曲线
-            path.quadTo(ctrlPoints[0], ctrlPoints[1]);
-            break;
-        case 3:  // 三次贝塞尔曲线
-            path.cubicTo(ctrlPoints[0], ctrlPoints[1], ctrlPoints[2]);
-            break;
-        default: // 线性路径
-            path.lineTo(m_ctrlSteerWheel.delayData.historyPoints.last());
+    case 2: // 二次贝塞尔曲线
+        path.quadTo(ctrlPoints[0], ctrlPoints[1]);
+        break;
+    case 3: // 三次贝塞尔曲线
+        path.cubicTo(ctrlPoints[0], ctrlPoints[1], ctrlPoints[2]);
+        break;
+    default: // 线性路径
+        path.lineTo(m_ctrlSteerWheel.delayData.historyPoints.last());
     }
     return path;
 }
@@ -1115,7 +823,8 @@ void InputConvertGame::switchMouse(const KeyMap::KeyMapNode &node, const QKeyEve
     bool forceSwitchOn = node.forceSwitchOn;
     bool forceSwitchOff = node.forceSwitchOff;
     bool switchMap = node.switchMap;
-    if (!switchMap || QEvent::KeyRelease != from->type()) return;
+    if (!switchMap || QEvent::KeyRelease != from->type())
+        return;
     switchMouse(node, forceSwitchOn, forceSwitchOff);
 }
 void InputConvertGame::switchMouse(const KeyMap::KeyMapNode &node, bool forceSwitchOn, bool forceSwitchOff)
@@ -1124,9 +833,9 @@ void InputConvertGame::switchMouse(const KeyMap::KeyMapNode &node, bool forceSwi
     bool newPointerMode;
     if (forceSwitchOn) {
         newPointerMode = true;
-    }else if (forceSwitchOff) {
+    } else if (forceSwitchOff) {
         newPointerMode = false;
-    }else {
+    } else {
         newPointerMode = !m_pointerMode;
     }
     qDebug() << "switchMouse pointerMode:" << newPointerMode;
@@ -1159,16 +868,14 @@ void InputConvertGame::processKeyClickMulti(const KeyMap::DelayClickNode *nodes,
         if (pressTime > 0) {
             delay += (int)pressTime;
         }
-        if(nodes[i].pressTime > 0){
+        if (nodes[i].pressTime > 0) {
             qDebug() << "pressTime:" << nodes[i].pressTime;
             delay += nodes[i].pressTime;
         }
         // Don't up it too fast
         delay += QRandomGenerator::global()->bounded(10, 20);
 
-        QTimer::singleShot(delay, this, [this, key, clickPos]() {
-            m_touchInjector->endByKey(key, clickPos);
-        });
+        QTimer::singleShot(delay, this, [this, key, clickPos]() { m_touchInjector->endByKey(key, clickPos); });
     }
 }
 
@@ -1181,7 +888,7 @@ void InputConvertGame::onDragTimer()
     m_dragDelayData.currentPos = m_dragDelayData.queuePos.dequeue();
     m_touchInjector->moveId(id, m_dragDelayData.currentPos);
 
-    if (m_dragDelayData.queuePos.empty()&&m_dragDelayData.allowUp) {
+    if (m_dragDelayData.queuePos.empty() && m_dragDelayData.allowUp) {
         delete m_dragDelayData.timer;
         m_dragDelayData.timer = nullptr;
         QTimer::singleShot(m_dragDelayData.dragDelayUpTime, this, [this, id]() {
@@ -1202,7 +909,7 @@ void InputConvertGame::onDragTimer()
 void InputConvertGame::onWheelScrollTimer()
 {
     bool hasDrag = false;
-    for (auto &item: m_wheelDelayData.dragData) {
+    for (auto &item : m_wheelDelayData.dragData) {
         if (item.queuePos.empty()) {
             continue;
         }
@@ -1243,9 +950,10 @@ void InputConvertGame::processKeyDrag(const QPointF &startPos, QPointF endPos, c
     }
 }
 
-void InputConvertGame::onWheelUpTimer(){
+void InputConvertGame::onWheelUpTimer()
+{
 
-    for (auto &item: m_wheelDelayData.dragData) {
+    for (auto &item : m_wheelDelayData.dragData) {
         int id = m_touchInjector->idForKey(item.pressKey);
         m_touchInjector->upId(id, item.currentPos);
         m_touchInjector->detachId(id);
@@ -1256,7 +964,8 @@ void InputConvertGame::onWheelUpTimer(){
     m_wheelDelayData.wheeling = false;
 }
 
-void InputConvertGame::dragStop() {
+void InputConvertGame::dragStop()
+{
     if (m_dragDelayData.timer && m_dragDelayData.timer->isActive()) {
         m_dragDelayData.timer->stop();
         delete m_dragDelayData.timer;
@@ -1296,7 +1005,8 @@ void InputConvertGame::processAndroidKey(AndroidKeycode androidKey, QEvent::Type
 
 // -------- mouse event --------
 
-bool InputConvertGame::processMouseClick(const QMouseEvent *from) {
+bool InputConvertGame::processMouseClick(const QMouseEvent *from)
+{
     const KeyMap::KeyMapNode node = m_keyMap.getKeyMapNodeMouse(from->button());
     if (KeyMap::KMT_INVALID == node.type) {
         return false;
@@ -1344,9 +1054,7 @@ bool InputConvertGame::processMouseClick(const QMouseEvent *from) {
             // Don't up it too fast
             delay += QRandomGenerator::global()->bounded(20, 30);
 
-            QTimer::singleShot(delay, this, [this, button, clickPos]() {
-                m_touchInjector->endByKey(button, clickPos);
-            });
+            QTimer::singleShot(delay, this, [this, button, clickPos]() { m_touchInjector->endByKey(button, clickPos); });
         }
         return true;
     }
@@ -1358,7 +1066,8 @@ bool InputConvertGame::processMouseClick(const QMouseEvent *from) {
     }
 }
 
-void InputConvertGame::processMouseClick(const QMouseEvent *from, const KeyMap::KeyMapNode &node) {
+void InputConvertGame::processMouseClick(const QMouseEvent *from, const KeyMap::KeyMapNode &node)
+{
     if (QEvent::MouseButtonPress == from->type() || QEvent::MouseButtonDblClick == from->type()) {
         m_keyPosMap[from->button()] = generatePos(node.data.click.keyNode.pos, node.data.click.keyNode.radius);
         const auto h = m_touchInjector->begin(from->button(), m_keyPosMap[from->button()]);
@@ -1373,10 +1082,11 @@ void InputConvertGame::processMouseClick(const QMouseEvent *from, const KeyMap::
     }
 }
 
-bool InputConvertGame::processCustomMouseClick(const QMouseEvent *from) {
+bool InputConvertGame::processCustomMouseClick(const QMouseEvent *from)
+{
     if (QEvent::MouseButtonPress == from->type() || QEvent::MouseButtonDblClick == from->type()) {
-//        qDebug() << "customMouseClick "<<from->button();
-        if (from->button()==Qt::LeftButton) {
+        //        qDebug() << "customMouseClick "<<from->button();
+        if (from->button() == Qt::LeftButton) {
             if (from->modifiers() & Qt::ControlModifier && !m_keyMap.isValidMobaWheel()) {
                 QPointF pos = from->localPos();
                 int key = Qt::ControlModifier + Qt::LeftButton;
@@ -1387,10 +1097,10 @@ bool InputConvertGame::processCustomMouseClick(const QMouseEvent *from) {
                 int clickTime = 2;
                 for (int i = 0; i < clickTime; i++) {
                     QPointF clickPos = generatePos(pos, 0.005);
-                    QTimer::singleShot(delay, this, [this,key, clickPos]() {
+                    QTimer::singleShot(delay, this, [this, key, clickPos]() {
                         const int id = m_touchInjector->attachIdForKey(key);
                         m_touchInjector->downId(id, clickPos);
- });
+                    });
                     // Don't up it too fast
                     delay += QRandomGenerator::global()->bounded(10, 20);
                     if (i >= clickTime - 1) {
@@ -1400,7 +1110,7 @@ bool InputConvertGame::processCustomMouseClick(const QMouseEvent *from) {
                         const int id = m_touchInjector->idForKey(key);
                         m_touchInjector->upId(id, clickPos);
                         m_touchInjector->detachId(id);
-                     });
+                    });
                     delay += QRandomGenerator::global()->bounded(10, 20);
                 }
                 return true;
@@ -1416,7 +1126,7 @@ bool InputConvertGame::processCustomMouseClick(const QMouseEvent *from) {
             qDebug() << "left button click ";
             return true;
         }
-        if (from->button()==Qt::RightButton) {
+        if (from->button() == Qt::RightButton) {
             if (from->modifiers() & Qt::ControlModifier && !m_keyMap.isValidMobaWheel()) {
                 dragStop();
                 // pos
@@ -1457,9 +1167,7 @@ bool InputConvertGame::processCustomMouseClick(const QMouseEvent *from) {
             qDebug() << "right button click";
             processAndroidKey(AKEYCODE_BACK, QEvent::KeyPress);
             const int delay = QRandomGenerator::global()->bounded(30, 50);
-            QTimer::singleShot(delay, this, [this]() {
-                processAndroidKey(AKEYCODE_BACK, QEvent::KeyRelease);
-            });
+            QTimer::singleShot(delay, this, [this]() { processAndroidKey(AKEYCODE_BACK, QEvent::KeyRelease); });
         }
     }
     if (QEvent::MouseMove == from->type()) {
@@ -1477,7 +1185,7 @@ bool InputConvertGame::processCustomMouseClick(const QMouseEvent *from) {
         return true;
     }
     if (QEvent::MouseButtonRelease == from->type()) {
-        if (from->button()==Qt::LeftButton) {
+        if (from->button() == Qt::LeftButton) {
             if (from->modifiers() & Qt::ControlModifier && !m_keyMap.isValidMobaWheel()) {
                 return true;
             }
@@ -1490,94 +1198,13 @@ bool InputConvertGame::processCustomMouseClick(const QMouseEvent *from) {
     return true;
 }
 
-bool InputConvertGame::processMouseMove(const QMouseEvent *from)
+double InputConvertGame::generateDouble(double min, double max)
 {
-    if (QEvent::MouseMove != from->type()) {
-        return false;
-    }
-    qDebug() << "normal mouse move from:" << from->localPos();
-#if defined(Q_OS_WIN32)
-    return true;
-#endif
-    mouseMoveStartTouch(*new QPointF);
-
-    startMouseMoveTimer();
-
-    bool outOfBoundary = checkCursorPos(from);
-
-    QPointF lastPos = m_ctrlMouseMove.lastPos;
-
-    if (outOfBoundary) {
-        lastPos = m_ctrlMouseMove.cursorPos;
-        m_ctrlMouseMove.cursorPos = from->localPos();
-//        qDebug()<< "mouse move out of boundary, lastPos:" << lastPos << "cursorPos:" << m_ctrlMouseMove.cursorPos;
-    } else {
-        m_ctrlMouseMove.lastPos = from->localPos();
-    }
-//    qDebug() << "mouse move from:" << from->localPos() << "lastPos:" << lastPos << "outOfBoundary:" << outOfBoundary;
-    QPointF speedRatio = m_currentSpeedRatio;
-    QPointF distance_raw{from->localPos() - lastPos};
-
-    if (qAbs(distance_raw.x()) > 200) {
-        qDebug() << "mouse move distance_raw:" << distance_raw;
-    }
-
-    QPointF currentConvertPos(
-            m_ctrlMouseMove.lastConvertPos.x() + distance_raw.x() / (speedRatio.x() * m_frameSize.width()),
-            m_ctrlMouseMove.lastConvertPos.y() + distance_raw.y() / (speedRatio.y() * m_frameSize.height())
-    );
-
-    if (!m_ctrlMouseMove.needResetTouch) {
-        bool boundary = false;
-        if (currentConvertPos.x() <= 0) {
-            currentConvertPos.setX(0);
-            boundary = true;
-        } else if (currentConvertPos.x()>= 1) {
-            currentConvertPos.setX(1);
-            boundary = true;
-        }
-        if (currentConvertPos.y() <= 0) {
-            currentConvertPos.setY(0);
-            boundary = true;
-        }else if (currentConvertPos.y() >= 1) {
-            currentConvertPos.setY(1);
-            boundary = true;
-        }
-        if (boundary) {
-            mouseMove(currentConvertPos);
-            return true;
-        }
-    }
-
-    if (checkBoundary(currentConvertPos)) {
-//        qDebug() << "over the boundary";
-        if (currentConvertPos.x()>= 1) currentConvertPos.setX(1);
-        else if (currentConvertPos.x() <= 0) currentConvertPos.setX(0);
-        if (currentConvertPos.y() >= 1) currentConvertPos.setY(1);
-        else if (currentConvertPos.y() <= 0) currentConvertPos.setY(0);
-
-        if (currentConvertPos.x()==0||currentConvertPos.x()==1) {
-            qDebug() << "out of pad boundary pos:" << currentConvertPos;
-        }
-        mouseMove(currentConvertPos);
-        mouseMoveStopTouch(true);
-        mouseMoveStartTouch(*new QPointF);
-        m_ctrlMouseMove.leftBoundary = generateDouble(0.25, 0.4);
-        m_ctrlMouseMove.maxBoundary = generateDouble(0.8, 0.95);
-        m_ctrlMouseMove.topBoundary = generateDouble(0.05, 0.2);
-        return true;
-    }
-    mouseMove(currentConvertPos);
-//    qint64 elapsedMs = timer.elapsed(); // 获取毫秒耗时
-//    qDebug() << "mouse move elapsed time:" << elapsedMs << "ms";
-    return true;
-}
-
-double InputConvertGame::generateDouble(double min, double max) {
     return QRandomGenerator::global()->generateDouble() * (max - min) + min;
 }
 
-bool InputConvertGame::mouseMove(const QPointF &currentConvertPos) {
+bool InputConvertGame::mouseMove(const QPointF &currentConvertPos)
+{
     if (m_ctrlMouseMove.touching) {
         m_ctrlMouseMove.lastConvertPos = currentConvertPos;
         m_touchInjector->moveId(m_ctrlMouseMove.focusTouchID, currentConvertPos);
@@ -1585,14 +1212,13 @@ bool InputConvertGame::mouseMove(const QPointF &currentConvertPos) {
     return true;
 }
 
-bool InputConvertGame::checkBoundary(const QPointF &currentConvertPos) const {
+bool InputConvertGame::checkBoundary(const QPointF &currentConvertPos) const
+{
     if (!m_ctrlMouseMove.needResetTouch) {
         return false;
     }
-    return currentConvertPos.x() > m_ctrlMouseMove.maxBoundary
-    || currentConvertPos.x() < m_ctrlMouseMove.leftBoundary
-    || currentConvertPos.y() < m_ctrlMouseMove.topBoundary
-    || currentConvertPos.y() > m_ctrlMouseMove.maxBoundary;
+    return currentConvertPos.x() > m_ctrlMouseMove.maxBoundary || currentConvertPos.x() < m_ctrlMouseMove.leftBoundary
+           || currentConvertPos.y() < m_ctrlMouseMove.topBoundary || currentConvertPos.y() > m_ctrlMouseMove.maxBoundary;
 }
 
 bool InputConvertGame::checkCursorPos(const QMouseEvent *from)
@@ -1614,7 +1240,7 @@ bool InputConvertGame::checkCursorPos(const QMouseEvent *from)
     }
 
     if (!outOfCenter) {
-//        qDebug() << "mouse move in center pos:" << pos;
+        //        qDebug() << "mouse move in center pos:" << pos;
         return false;
     }
 
@@ -1622,13 +1248,13 @@ bool InputConvertGame::checkCursorPos(const QMouseEvent *from)
 
     if (!outOfBoundary) {
         if (m_ctrlMouseMove.outOfBoundary) {
-//            qDebug() << "mouse move in boundary pos:" << pos;
+            //            qDebug() << "mouse move in boundary pos:" << pos;
         }
         m_ctrlMouseMove.outOfBoundary = false;
         return outOfBoundary;
     }
     if (!m_ctrlMouseMove.outOfBoundary) {
-//        qDebug() << "mouse move first out of boundary pos:" << pos;
+        //        qDebug() << "mouse move first out of boundary pos:" << pos;
         m_ctrlMouseMove.cursorPos = m_ctrlMouseMove.lastPos;
         moveCursorTo(from, m_ctrlMouseMove.centerPos);
         m_ctrlMouseMove.lastPos = m_ctrlMouseMove.centerPos;
@@ -1654,13 +1280,14 @@ bool InputConvertGame::checkCursorPos(const QMouseEvent *from)
     return outOfBoundary;
 }
 
-bool InputConvertGame::checkOutOfBoundary(const QPoint &pos, int oneOfSevenWidth, int oneOfSevenHeight) const {
+bool InputConvertGame::checkOutOfBoundary(const QPoint &pos, int oneOfSevenWidth, int oneOfSevenHeight) const
+{
     bool outOfBoundary = false;
-    if (pos.x() < oneOfSevenWidth*2) {
+    if (pos.x() < oneOfSevenWidth * 2) {
         outOfBoundary = true;
     } else if (pos.x() > m_showSize.width() - oneOfSevenWidth * 2) {
         outOfBoundary = true;
-    } else if (pos.y() < oneOfSevenHeight*2) {
+    } else if (pos.y() < oneOfSevenHeight * 2) {
         outOfBoundary = true;
     } else if (pos.y() > m_showSize.height() - oneOfSevenHeight * 2) {
         outOfBoundary = true;
@@ -1703,13 +1330,14 @@ void InputConvertGame::mouseMoveStopTouch(bool delay)
         return;
     }
     int id = m_touchInjector->idForKey(Qt::ExtraButton24);
-    if (id < 0) return;
+    if (id < 0)
+        return;
 
     m_ctrlMouseMove.touching = false;
     m_touchInjector->resetId(id, Qt::Key_unknown);
     QPointF touchUpPos = m_ctrlMouseMove.lastConvertPos;
     if (delay) {
-        QTimer::singleShot(QRandomGenerator::global()->bounded(50,100), this, [this, id,touchUpPos]() {
+        QTimer::singleShot(QRandomGenerator::global()->bounded(50, 100), this, [this, id, touchUpPos]() {
             m_touchInjector->detachId(id);
             m_touchInjector->upId(id, touchUpPos);
         });
@@ -1718,7 +1346,6 @@ void InputConvertGame::mouseMoveStopTouch(bool delay)
         m_touchInjector->upId(id, touchUpPos);
     }
 }
-
 
 void InputConvertGame::startMouseMoveTimer()
 {
@@ -1746,7 +1373,7 @@ bool InputConvertGame::switchGameMap()
     hideMouseCursor(m_gameMap);
 
     if (m_gameMap) {
-        const QPoint globalPos = QCursor::pos(); // 获取屏幕全局坐标
+        const QPoint globalPos = QCursor::pos();                                         // 获取屏幕全局坐标
         const QPoint windowPos = QApplication::activeWindow()->mapFromGlobal(globalPos); // 转换为当前窗口坐标
         m_ctrlMouseMove.lastPos = windowPos;
     } else {
@@ -1769,10 +1396,10 @@ void InputConvertGame::hideMouseCursor(const bool hide)
         QWidget *activeWindow = QApplication::activeWindow();
         RECT rect; // 定义一个 RECT 结构体，表示锁定的范围
         QPointF topLeft = activeWindow->mapToGlobal(activeWindow->rect().topLeft());
-        rect.top = topLeft.y()+ m_showSize.height()/2;
-        rect.left = topLeft.x()+ m_showSize.width()/2;
-        rect.bottom = topLeft.y() + m_showSize.height()/2+1;
-        rect.right = topLeft.x() + m_showSize.width()/2+1;
+        rect.top = topLeft.y() + m_showSize.height() / 2;
+        rect.left = topLeft.x() + m_showSize.width() / 2;
+        rect.bottom = topLeft.y() + m_showSize.height() / 2 + 1;
+        rect.right = topLeft.x() + m_showSize.width() / 2 + 1;
         ClipCursor(&rect);
         qDebug() << "lock mouse" << rect.top << rect.left << rect.bottom << rect.right << m_showSize;
 #endif
@@ -1824,9 +1451,9 @@ void InputConvertGame::processRotaryTable(const KeyMap::KeyMapNode &node, const 
             const auto h = m_touchInjector->begin(key, pos);
 
             QTimer::singleShot(delay, this, [this, node, key, pos]() {
-
                 const int id = m_touchInjector->idForKey(key);
-                if (id < 0) return;
+                if (id < 0)
+                    return;
                 mouseMoveStopTouch(true);
                 m_ctrlMouseMove.touching = true;
                 m_ctrlMouseMove.focusTouchID = id;
@@ -1837,7 +1464,8 @@ void InputConvertGame::processRotaryTable(const KeyMap::KeyMapNode &node, const 
             });
         } else {
             const int id = m_touchInjector->idForKey(key);
-            if (id < 0) return;
+            if (id < 0)
+                return;
             stopMouseMoveTimer();
             m_ctrlMouseMove.needResetTouch = true;
             m_currentSpeedRatio = m_keyMap.getMouseMoveMap().data.mouseMove.speedRatio;
@@ -1878,24 +1506,21 @@ void InputConvertGame::processPressRelease(const KeyMap::KeyMapNode &node, const
         const auto h = m_touchInjector->begin(key, processedPos);
         Q_UNUSED(h);
         int delay = QRandomGenerator::global()->bounded(20, 30);
-        QTimer::singleShot(delay, this, [this, key, processedPos]() {
-            m_touchInjector->endByKey(key, processedPos);
-        });
+        QTimer::singleShot(delay, this, [this, key, processedPos]() { m_touchInjector->endByKey(key, processedPos); });
     } else if (QEvent::KeyRelease == from->type()) {
         QPointF processedPos = generatePos(node.data.pressRelease.releasePos, 0.01);
         const auto h = m_touchInjector->begin(key, processedPos);
         Q_UNUSED(h);
         int delay = QRandomGenerator::global()->bounded(20, 30);
-        QTimer::singleShot(delay, this, [this, key, processedPos]() {
-            m_touchInjector->endByKey(key, processedPos);
-        });
+        QTimer::singleShot(delay, this, [this, key, processedPos]() { m_touchInjector->endByKey(key, processedPos); });
         if (node.switchMap) {
             switchMouse(node, false, true);
         }
     }
 }
 
-bool InputConvertGame::processMobaWheel(const QMouseEvent *from) {
+bool InputConvertGame::processMobaWheel(const QMouseEvent *from)
+{
     KeyMap::KeyMapNode node = m_keyMap.getKeyMapNodeMouse(from->button());
     m_ctrlSteerWheel.touchKey = from->button();
     m_ctrlSteerWheel.mobaWheel.localPos = from->localPos();
@@ -1910,11 +1535,8 @@ bool InputConvertGame::processMobaWheel(const QMouseEvent *from) {
                 m_dragDelayData.queuePos.clear();
             }
             m_dragDelayData.allowUp = true;
-            m_dragDelayData.path = generateLinePath(
-                    m_dragDelayData.currentPos, node.data.mobaWheel.cancelSkill.pos);
-            getDelayQueue(m_dragDelayData.queuePos, m_dragDelayData.queueTimer,
-                          false, 1, 0, 3,
-                          m_dragDelayData.path);
+            m_dragDelayData.path = generateLinePath(m_dragDelayData.currentPos, node.data.mobaWheel.cancelSkill.pos);
+            getDelayQueue(m_dragDelayData.queuePos, m_dragDelayData.queueTimer, false, 1, 0, 3, m_dragDelayData.path);
             m_dragDelayData.dragDelayUpTime = 50;
             m_dragDelayData.timer->start();
         }
@@ -1931,10 +1553,10 @@ bool InputConvertGame::processMobaWheel(const QMouseEvent *from) {
             m_ctrlSteerWheel.delayData.queueTimer.clear();
             m_ctrlSteerWheel.delayData.queuePos.clear();
             m_ctrlSteerWheel.mobaWheel.localPos = localPos;
-        } else{
+        } else {
             const int id = m_touchInjector->attachIdForKey(m_ctrlSteerWheel.touchKey);
             m_touchInjector->downId(id, m_ctrlSteerWheel.mobaWheel.wheelCenterPos);
-            qDebug()<< "moba wheel down id:" << id << " pos:" << m_ctrlSteerWheel.mobaWheel.wheelCenterPos;
+            qDebug() << "moba wheel down id:" << id << " pos:" << m_ctrlSteerWheel.mobaWheel.wheelCenterPos;
             m_ctrlSteerWheel.mobaWheel.localPos = localPos;
         }
         m_mobaMouseMovePending = true;
@@ -1942,16 +1564,17 @@ bool InputConvertGame::processMobaWheel(const QMouseEvent *from) {
     }
     if (QEvent::MouseButtonRelease == from->type()) {
         m_ctrlSteerWheel.mobaWheel.buttonPressed = false;
-//        QPointF rawPos{from->localPos().x() / m_showSize.width(), from->localPos().y() / m_showSize.height()};
-//        double distance = calcDistance(rawPos, node.data.mobaWheel.characterCenterPos);
-//        double delay = distance * 3500;
+        //        QPointF rawPos{from->localPos().x() / m_showSize.width(), from->localPos().y() / m_showSize.height()};
+        //        double distance = calcDistance(rawPos, node.data.mobaWheel.characterCenterPos);
+        //        double delay = distance * 3500;
         stopMobaWheel();
         return true;
     }
     return true;
 }
 
-void InputConvertGame::stopMobaWheel() {
+void InputConvertGame::stopMobaWheel()
+{
 
     m_ctrlSteerWheel.delayData.queuePos.clear();
     m_ctrlSteerWheel.delayData.queueTimer.clear();
@@ -1962,23 +1585,20 @@ void InputConvertGame::stopMobaWheel() {
             return;
         }
         m_ctrlSteerWheel.wheeling = true;
-        m_ctrlSteerWheel.delayData.path = generateLinePath(
-            m_ctrlSteerWheel.delayData.currentPos,
-            m_ctrlSteerWheel.delayData.endPos);
-        getDelayQueue(
-        m_ctrlSteerWheel.delayData.queuePos,
-        m_ctrlSteerWheel.delayData.queueTimer, false,
-        1, 0, 3, m_ctrlSteerWheel.delayData.path);
-    }else {
+        m_ctrlSteerWheel.delayData.path = generateLinePath(m_ctrlSteerWheel.delayData.currentPos, m_ctrlSteerWheel.delayData.endPos);
+        getDelayQueue(m_ctrlSteerWheel.delayData.queuePos, m_ctrlSteerWheel.delayData.queueTimer, false, 1, 0, 3, m_ctrlSteerWheel.delayData.path);
+    } else {
         onStopMobaWheelTimer();
     }
 }
 
-double InputConvertGame::calcDistance(const QPointF &point1, const QPointF &point2) {
+double InputConvertGame::calcDistance(const QPointF &point1, const QPointF &point2)
+{
     return std::sqrt(std::pow(point2.x() - point1.x(), 2) + std::pow(point2.y() - point1.y(), 2));
 }
 
-bool InputConvertGame::processMobaMouseClick(const QMouseEvent *from) {
+bool InputConvertGame::processMobaMouseClick(const QMouseEvent *from)
+{
     const KeyMap::KeyMapNode node = m_keyMap.getKeyMapNodeMouse(from->button());
     if (KeyMap::KMT_INVALID == node.type) {
         return false;
@@ -1989,29 +1609,30 @@ bool InputConvertGame::processMobaMouseClick(const QMouseEvent *from) {
         return true;
     }
     switch (type) {
-        case KeyMap::KMT_CLICK: {
-            processMouseClick(from, node);
-            return true;
-        }
-        case KeyMap::KMT_BURST_CLICK: {
-            bool press = false;
-            if (QEvent::MouseButtonPress == from->type() || QEvent::MouseButtonDblClick == from->type()) {
-                press = true;
-            } else if (QEvent::MouseButtonRelease == from->type()) {
-                press = false;
-            } else {
-                return false;
-            }
-            processBurstClick(node, from->button(), press);
-            return true;
-        }
-        default:
+    case KeyMap::KMT_CLICK: {
+        processMouseClick(from, node);
+        return true;
+    }
+    case KeyMap::KMT_BURST_CLICK: {
+        bool press = false;
+        if (QEvent::MouseButtonPress == from->type() || QEvent::MouseButtonDblClick == from->type()) {
+            press = true;
+        } else if (QEvent::MouseButtonRelease == from->type()) {
+            press = false;
+        } else {
             return false;
+        }
+        processBurstClick(node, from->button(), press);
+        return true;
+    }
+    default:
+        return false;
     }
     return false;
-    }
+}
 
-bool InputConvertGame::processMobaMouseMove(const QMouseEvent *from) {
+bool InputConvertGame::processMobaMouseMove(const QMouseEvent *from)
+{
     if (QEvent::MouseMove != from->type()) {
         return false;
     }
@@ -2020,7 +1641,8 @@ bool InputConvertGame::processMobaMouseMove(const QMouseEvent *from) {
     return true;
 }
 
-void InputConvertGame::processMobaMouseMoveInternal() {
+void InputConvertGame::processMobaMouseMoveInternal()
+{
     if (!m_mobaMouseMovePending) {
         return;
     }
@@ -2034,24 +1656,24 @@ void InputConvertGame::processMobaMouseMoveInternal() {
             m_dragDelayData.queuePos.clear();
         }
 
-        const QPointF rawPos{m_ctrlSteerWheel.mobaWheel.localPos.x() / m_showSize.width(), m_ctrlSteerWheel.mobaWheel.localPos.y() / m_showSize.height()};
+        const QPointF rawPos{ m_ctrlSteerWheel.mobaWheel.localPos.x() / m_showSize.width(), m_ctrlSteerWheel.mobaWheel.localPos.y() / m_showSize.height() };
 
         const QPointF distance = calcPerspectiveSkillDistance(rawPos, m_ctrlSteerWheel.mobaWheel.characterCenterPos, skillRatio);
 
-        const QPointF endPos{m_dragDelayData.startPos + distance};
+        const QPointF endPos{ m_dragDelayData.startPos + distance };
         const int touchId = m_touchInjector->idForKey(m_dragDelayData.pressKey);
         m_touchInjector->moveId(touchId, endPos);
         m_dragDelayData.currentPos = endPos;
         return;
     }
     // 处理轮盘
-    if (m_ctrlSteerWheel.mobaWheel.buttonPressed ) {
+    if (m_ctrlSteerWheel.mobaWheel.buttonPressed) {
 
         const double speedRatio = m_ctrlSteerWheel.mobaWheel.speedRatio;
 
-        const QPointF rawPos{m_ctrlSteerWheel.mobaWheel.localPos.x() / m_showSize.width(), m_ctrlSteerWheel.mobaWheel.localPos.y() / m_showSize.height()};
+        const QPointF rawPos{ m_ctrlSteerWheel.mobaWheel.localPos.x() / m_showSize.width(), m_ctrlSteerWheel.mobaWheel.localPos.y() / m_showSize.height() };
         const QPointF distance = calcPerspectiveSkillDistance(rawPos, m_ctrlSteerWheel.mobaWheel.characterCenterPos, speedRatio);
-        const QPointF endPos{m_ctrlSteerWheel.mobaWheel.wheelCenterPos + distance};
+        const QPointF endPos{ m_ctrlSteerWheel.mobaWheel.wheelCenterPos + distance };
 
         m_ctrlSteerWheel.mobaWheel.endPos = endPos;
 
@@ -2063,71 +1685,13 @@ void InputConvertGame::processMobaMouseMoveInternal() {
         m_ctrlSteerWheel.delayData.queuePos.clear();
         m_ctrlSteerWheel.delayData.currentPos = endPos;
         const int touchId = m_touchInjector->idForKey(m_ctrlSteerWheel.touchKey);
-//        qDebug()<< "moba wheel move to endPos:" << endPos<<"id:" << touchId;
+        //        qDebug()<< "moba wheel move to endPos:" << endPos<<"id:" << touchId;
         m_touchInjector->moveId(touchId, endPos);
     }
 }
 
-QPointF InputConvertGame::calcPerspectiveSkillDistance(const QPointF &rawPos, const QPointF &centerPos, double skillRatio) {
-    // 计算鼠标相对于角色中心的屏幕空间向量
-    // rawPos 是鼠标在屏幕上的归一化坐标 (0-1)
-    // characterCenterPos 是角色中心在屏幕上的归一化坐标 (0-1)
-    QPointF screenDelta = rawPos - centerPos;
-
-    // ========== 椭圆公式转换方案 ==========
-    // 原理：通过椭圆几何公式，将鼠标移动从圆形空间映射到椭圆空间
-    // 这样可以为不同方向设置不同的缩放比例，精确模拟MOBA游戏的透视效果
-    //
-    // 椭圆参数（对应图片中的虚拟半径）：
-    //   - radiusUp：向上（远处）半径 = 50.0，较小值压缩上方移动
-    //   - radiusDown：向下（近处）半径 = 75.5，较大值拉伸下方移动
-    //   - radiusX：左右方向半径 = 74.5，中等值
-    //
-    // 公式：椭圆参数方程 x = a*cos(θ), y = b*sin(θ)
-    // 其中 a = radiusX, b = radiusUp(上半部分) 或 radiusDown(下半部分)
-
-    const double radiusUp = 100;    // 虚拟↑半径（图片中的值）
-    const double radiusDown = 75;  // 虚拟↓半径
-    const double radiusX = 75;     // 虚拟X半径
-
-    // 1. 计算输入向量的极坐标（角度和距离）
-    double angle = std::atan2(screenDelta.y(), screenDelta.x());
-    double inputDistance = std::sqrt(screenDelta.x() * screenDelta.x() + screenDelta.y() * screenDelta.y());
-
-    if (inputDistance < 1e-6) {
-        // 距离太小，直接返回零向量
-        return {0, 0};
-    }
-
-    // 2. 根据Y方向选择对应的椭圆半径
-    // screenDelta.y < 0 表示向上（屏幕坐标系Y轴向下为正）
-    double ellipseRadiusY = (screenDelta.y() < 0) ? radiusUp : radiusDown;
-
-    // 3. 计算该角度下椭圆边界到中心的距离
-    // 使用椭圆参数方程
-    double cosAngle = std::cos(angle);
-    double sinAngle = std::sin(angle);
-
-    double ellipseX = radiusX * cosAngle;
-    double ellipseY = ellipseRadiusY * sinAngle;
-    double ellipseRadius = std::sqrt(ellipseX * ellipseX + ellipseY * ellipseY);
-
-    // 4. 计算映射比例
-    // 输入假设在标准圆（半径100）中，输出映射到椭圆空间
-    const double standardCircleRadius = 100.0;
-    double mappingScale = ellipseRadius / standardCircleRadius;
-
-    // 5. 应用映射和灵敏度
-    QPointF worldDistance{
-        screenDelta.x() * mappingScale / skillRatio,
-        screenDelta.y() * mappingScale / skillRatio
-    };
-
-    return worldDistance;
-}
-
-
-void InputConvertGame::processMobaSkill(const KeyMap::KeyMapNode &node, const QKeyEvent *from) {
+void InputConvertGame::processMobaSkill(const KeyMap::KeyMapNode &node, const QKeyEvent *from)
+{
     bool quickCast = node.data.mobaSkill.quickCast;
     int key = from->key();
     qDebug() << "quickCast:" << quickCast;
@@ -2146,7 +1710,7 @@ void InputConvertGame::processMobaSkill(const KeyMap::KeyMapNode &node, const QK
 
         m_touchInjector->downId(id, clickPos);
         if (quickCast) {
-            QTimer::singleShot(30, this, [this,id,key] {
+            QTimer::singleShot(30, this, [this, id, key] {
                 m_touchInjector->upId(id, m_dragDelayData.startPos);
                 m_touchInjector->detachId(id);
                 qDebug() << "key:" << key;
@@ -2156,9 +1720,9 @@ void InputConvertGame::processMobaSkill(const KeyMap::KeyMapNode &node, const QK
         }
 
         const QPointF &localPos = m_ctrlSteerWheel.mobaWheel.localPos;
-        const QPointF rawPos{ localPos.x() / m_showSize.width(), localPos.y() / m_showSize.height()};
+        const QPointF rawPos{ localPos.x() / m_showSize.width(), localPos.y() / m_showSize.height() };
         const QPointF distance = calcPerspectiveSkillDistance(rawPos, m_ctrlSteerWheel.mobaWheel.characterCenterPos, skillRatio);
-        const QPointF endPos{m_dragDelayData.startPos + distance};
+        const QPointF endPos{ m_dragDelayData.startPos + distance };
 
         m_dragDelayData.allowUp = false;
         m_dragDelayData.timer = new QTimer(this);
@@ -2169,35 +1733,35 @@ void InputConvertGame::processMobaSkill(const KeyMap::KeyMapNode &node, const QK
         m_dragDelayData.queueTimer.clear();
 
         m_dragDelayData.path = generateLinePath(clickPos, endPos);
-        getDelayQueue(m_dragDelayData.queuePos, m_dragDelayData.queueTimer,
-                      false, 1, 0, 2,
-                      m_dragDelayData.path);
+        getDelayQueue(m_dragDelayData.queuePos, m_dragDelayData.queueTimer, false, 1, 0, 2, m_dragDelayData.path);
         m_dragDelayData.timer->start();
     } else if (QEvent::KeyRelease == from->type() && !quickCast) {
-         delete m_dragDelayData.timer;
-         m_dragDelayData.timer = nullptr;
-         m_dragDelayData.allowUp = true;
-         const int id = m_touchInjector->idForKey(from->key());
-         // Preserve original ordering: up then detach.
-         m_touchInjector->upId(id, m_dragDelayData.currentPos);
-         m_touchInjector->detachId(id);
-         m_ctrlSteerWheel.mobaWheel.skillPressed = false;
-     }
- }
+        delete m_dragDelayData.timer;
+        m_dragDelayData.timer = nullptr;
+        m_dragDelayData.allowUp = true;
+        const int id = m_touchInjector->idForKey(from->key());
+        // Preserve original ordering: up then detach.
+        m_touchInjector->upId(id, m_dragDelayData.currentPos);
+        m_touchInjector->detachId(id);
+        m_ctrlSteerWheel.mobaWheel.skillPressed = false;
+    }
+}
 
-void InputConvertGame::processKeyBoardBurstClick(const KeyMap::KeyMapNode &node, const QKeyEvent *from) {
+void InputConvertGame::processKeyBoardBurstClick(const KeyMap::KeyMapNode &node, const QKeyEvent *from)
+{
     bool press = false;
     if (QEvent::KeyPress == from->type()) {
         press = true;
-    }else if (QEvent::KeyRelease == from->type()) {
+    } else if (QEvent::KeyRelease == from->type()) {
         press = false;
-    }else {
+    } else {
         return;
     }
     processBurstClick(node, from->key(), press);
 }
 
-void InputConvertGame::processBurstClick(const KeyMap::KeyMapNode &node, const int key, const bool press) {
+void InputConvertGame::processBurstClick(const KeyMap::KeyMapNode &node, const int key, const bool press)
+{
     if (press) {
         int clickInterval = 1000 / node.data.burstClick.rate;
         if (clickInterval < 100) {
@@ -2210,7 +1774,8 @@ void InputConvertGame::processBurstClick(const KeyMap::KeyMapNode &node, const i
     }
 }
 
-void InputConvertGame::cycleClick(QPointF pos, int clickInterval, int key) {
+void InputConvertGame::cycleClick(QPointF pos, int clickInterval, int key)
+{
     QPointF processedPos = generatePos(pos, 0.01);
 
     if (!m_ctrlSteerWheel.mobaWheel.skillPressed) {
@@ -2224,30 +1789,32 @@ void InputConvertGame::cycleClick(QPointF pos, int clickInterval, int key) {
         if (!m_burstClickKeySet.contains(key)) {
             return;
         }
-        QTimer::singleShot(nextClick, this, [this, key, pos, clickInterval]() {
-            cycleClick(pos, clickInterval, key);
-        });
+        QTimer::singleShot(nextClick, this, [this, key, pos, clickInterval]() { cycleClick(pos, clickInterval, key); });
     });
 }
 
-KeyMap::KeyMapNode InputConvertGame::getNode(const QKeyEvent *from) {
-    if (from->key() == Qt::Key_Control ||
-        from->key() == Qt::Key_Shift ||
-        from->key() == Qt::Key_Alt) {
+KeyMap::KeyMapNode InputConvertGame::getNode(const QKeyEvent *from)
+{
+    if (from->key() == Qt::Key_Control || from->key() == Qt::Key_Shift || from->key() == Qt::Key_Alt) {
         return m_keyMap.getKeyMapNodeKey(from->key());
     }
     if (from->modifiers() & Qt::ControlModifier) {
         KeyMap::KeyMapNode node = m_keyMap.getKeyMapNodeKey(from->key() + Qt::ControlModifier);
-        if (node.type != -1) { return node; }
+        if (node.type != -1) {
+            return node;
+        }
     }
     if (from->modifiers() & Qt::ShiftModifier) {
         KeyMap::KeyMapNode node = m_keyMap.getKeyMapNodeKey(from->key() + Qt::ShiftModifier);
-        if (node.type != -1) { return node; }
+        if (node.type != -1) {
+            return node;
+        }
     }
     if (from->modifiers() & Qt::AltModifier) {
         KeyMap::KeyMapNode node = m_keyMap.getKeyMapNodeKey(from->key() + Qt::AltModifier);
-        if (node.type != -1) { return node; }
+        if (node.type != -1) {
+            return node;
+        }
     }
     return m_keyMap.getKeyMapNodeKey(from->key());
 }
-

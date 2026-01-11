@@ -2,30 +2,30 @@
 #define INPUTCONVERTGAME_H
 
 #include <QApplication>
+#include <QElapsedTimer>
+#include <QMutex>
+#include <QPainterPath>
 #include <QPointF>
 #include <QQueue>
 #include <QScreen>
-#include <QWidget>
-#include <QMutex>
 #include <QTimer>
-#include <QPainterPath>
-#include <QElapsedTimer>
+#include <QWidget>
 
 #include "inputconvertnormal.h"
 #include "keymap.h"
 #include "maskwidget.h"
-#include "touchmanager.h"
 #include "touchinjectoradapter.h"
+#include "touchmanager.h"
 
 #define MULTI_TOUCH_MAX_NUM 10
-const int MAX_HISTORY = 3;       // 保留最近3个点
-class InputConvertGame : public InputConvertNormal {
-Q_OBJECT
+const int MAX_HISTORY = 3; // 保留最近3个点
+class InputConvertGame : public InputConvertNormal
+{
+    Q_OBJECT
 public:
     InputConvertGame(Controller *controller);
 
     virtual ~InputConvertGame();
-
 
     virtual void mouseEvent(const QMouseEvent *from, const QSize &frameSize, const QSize &showSize);
 
@@ -51,8 +51,7 @@ protected:
     void processKeyClick(bool clickTwice, const KeyMap::KeyMapNode &node, const QKeyEvent *from);
 
     // click mutil
-    void processKeyClickMulti(const KeyMap::DelayClickNode *nodes, const int count, const double pressTime,
-                              const QKeyEvent *from);
+    void processKeyClickMulti(const KeyMap::DelayClickNode *nodes, const int count, const double pressTime, const QKeyEvent *from);
 
     // drag
     void processKeyDrag(const QPointF &startPos, QPointF endPos, const QKeyEvent *from);
@@ -63,9 +62,9 @@ protected:
     // mouse
     bool processMouseClick(const QMouseEvent *from);
 
-void processMouseClick(const QMouseEvent *from, const KeyMap::KeyMapNode &node);
+    void processMouseClick(const QMouseEvent *from, const KeyMap::KeyMapNode &node);
 
-bool processCustomMouseClick(const QMouseEvent *from);
+    bool processCustomMouseClick(const QMouseEvent *from);
 
     bool processMouseMove(const QMouseEvent *from);
 
@@ -85,8 +84,7 @@ bool processCustomMouseClick(const QMouseEvent *from);
 
     void hideMouseCursor(bool hide);
 
-    void getCurvedDelayQueue(const QPointF &start, const QPointF &end, int stepCount, QQueue<QPointF> &queuePos,
-                             QQueue<quint32> &queueTimer);
+    void getCurvedDelayQueue(const QPointF &start, const QPointF &end, int stepCount, QQueue<QPointF> &queuePos, QQueue<quint32> &queueTimer);
 
 signals:
 
@@ -103,8 +101,7 @@ private slots:
     void onWheelUpTimer();
 
 private:
-
-    #include "inputconvertgame_vars.h"
+#include "inputconvertgame_vars.h"
 
     void processRotaryTable(const KeyMap::KeyMapNode &node, const QKeyEvent *constpos);
     void switchMouse(const KeyMap::KeyMapNode &node, const QKeyEvent *from);
@@ -121,7 +118,7 @@ private:
 
     void processMobaMouseMoveInternal();
 
-    bool processMobaMouseClick(const QMouseEvent * from);
+    bool processMobaMouseClick(const QMouseEvent *from);
 
     static double calcDistance(const QPointF &point1, const QPointF &point2);
 
@@ -153,8 +150,14 @@ private:
 
     void generateArcPath(const QPointF &start, const QPointF &end);
 
-    static void getDelayQueue(QQueue<QPointF> &queuePos, QQueue<quint32> &queueTimer, bool detect, quint32 stepTimer,
-                       quint32 randomTimer, int endFrame, const QPainterPath &path) ;
+    static void getDelayQueue(
+        QQueue<QPointF> &queuePos,
+        QQueue<quint32> &queueTimer,
+        bool detect,
+        quint32 stepTimer,
+        quint32 randomTimer,
+        int endFrame,
+        const QPainterPath &path);
 
     void updatePosition(const QPointF &newPos);
 
@@ -181,7 +184,6 @@ private:
     void onLoopTimer();
 
     static QPointF calcPerspectiveSkillDistance(const QPointF &rawPos, const QPointF &centerPos, double skillRatio);
-
 };
 
 #endif // INPUTCONVERTGAME_H

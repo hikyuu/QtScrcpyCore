@@ -67,6 +67,9 @@ set(QSC_DEVICE_SOURCES
     src/device/controller/inputconvert/inputconvertnormal.cpp
     src/device/controller/inputconvert/inputconvertgame.h
     src/device/controller/inputconvert/inputconvertgame.cpp
+    src/device/controller/inputconvert/game/mouseevent.cpp
+    src/device/controller/inputconvert/game/steerwheel.cpp
+    src/device/controller/inputconvert/game/moba/mobautils.cpp
     src/device/controller/inputconvert/controlmsg.h
     src/device/controller/inputconvert/controlmsg.cpp
     src/device/controller/inputconvert/keymap/keymap.h
